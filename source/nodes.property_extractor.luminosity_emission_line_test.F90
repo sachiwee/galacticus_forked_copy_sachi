@@ -70,7 +70,6 @@
      </methods>
      !!]
      final     ::                            emissionLineLuminosityDestructor
-     procedure :: luminosityHistoryHashedDescriptor => emissionLineLuminosityHistoryHashedDescriptor
      procedure :: elementCount            => emissionLineLuminosityElementCount
      procedure :: extract                 => emissionLineLuminosityExtract
      procedure :: names                   => emissionLineLuminosityNames
@@ -79,6 +78,7 @@
      procedure :: luminosityMean          => emissionLineLuminosityMean
      procedure :: indexTemplateTime       => emissionLineLuminosityIndexTemplateTime
      procedure :: indexTemplateNode       => emissionLineLuminosityIndexTemplateNode 
+     procedure :: luminosityHistoryHashedDescriptor => emissionLineLuminosityHistoryHashedDescriptor
   end type nodePropertyExtractorLuminosityEmissionLine
   
   interface nodePropertyExtractorLuminosityEmissionLine
@@ -352,8 +352,8 @@ contains
        luminosityTemplate  =  self%luminosityMean(time,starFormationHistory)
        luminosityTemplate_ => luminosityTemplate
     end if    
-    do iLines=1,size(emissionLineExtract,dim=1)
-       emissionLineExtract(iLines,1)=sum(luminosityTemplate_(iLines,:,:)*starFormationHistory%data(:,:))
+    do iLines=1,size(emissionLineLuminosityExtract,dim=1)
+       emissionLineLuminosityExtract(iLines,1)=sum(luminosityTemplate_(iLines,:,:)*starFormationHistory%data(:,:))
     end do
     return
   end function emissionLineLuminosityExtract
@@ -382,7 +382,7 @@ allocatable :: names
     implicit none
     class           (nodePropertyExtractorLuminosityEmissionLine), intent(inout)            :: self
     double precision                                       , intent(in   )                  :: time
-    type            (varying_string            ), intent(inout), dimension(:) , allocatable :: descriptions
+    type            (varying_string                       ), intent(inout), dimension(:) , allocatable :: descriptions
     !$GLC attributes unused :: self, time
 
     allocate(descriptions(1))
@@ -397,13 +397,10 @@ system.
     !!}
     use :: Numerical_Constants_Units, only : ergs
     implicit none
-    double precision                          , allocatable  , dimension(:)      ::
-emissionLineLuminosityUnitsInSI
-    class           (nodePropertyExtractorLuminosityEmissionLine), intent(inout) ::
-self
+    double precision                          , allocatable  , dimension(:)      :: emissionLineLuminosityUnitsInSI
+    class           (nodePropertyExtractorLuminosityEmissionLine), intent(inout) :: self
     double precision                          , intent(in   )                    :: time
-    type            (varying_string          ), intent(inout), dimension(:) ,
-allocatable :: descriptions
+    type            (varying_string          ), intent(inout), dimension(:) , allocatable :: descriptions
     !$GLC attributes unused :: time
 
     allocate(emissionLineLuminosityUnitsInSI(1))
@@ -698,7 +695,7 @@ allocatable :: descriptions
          redshift=self%cosmologyFunctions_%redshiftFromExpansionFactor(self%cosmologyFunctions_%expansionFactor(time))
       end if
       if (parallelize_) then
-      	emissionLineLuminosityIntegrandTime=+self%starFormationHistory_             *self%emissionLineLuminosity_age_z
+         emissionLineLuminosityIntegrandTime=+self%starFormationHistory_             *self%emissionLineLuminosity_age_z
       end if         
       return
     end function emissionLineLuminosityIntegrandTime
@@ -726,7 +723,7 @@ allocatable :: descriptions
     !![
     <workaround type="gfortran" PR="102845" url="https:&#x2F;&#x2F;gcc.gnu.org&#x2F;bugzilla&#x2F;show_bug.cgi=102845">
       <description>
-	Memory leak possibly due to OpenMP parallelism, or some failing of gfortran.
+        Memory leak possibly due to OpenMP parallelism, or some failing of gfortran.
       </description>
     </workaround>
     !!]
