@@ -23,13 +23,13 @@ Contains a module which implements a stellar mass function output analysis class
 
 
   !![
-  <outputAnalysis name="outputAnalysisLuminosityFunctionGunawardhana2013SDSS">
-   <description>An SDSS H$\alpha$ luminosity function output analysis class for the \cite{gunawardhana_galaxy_2013} analysis.</description>
+  <outputAnalysis name="outputAnalysisLuminosityFunctionOIIFavole2024SDSS">
+   <description>An SDSS OII luminosity function output analysis class for the \cite{favole_galaxy_2024} analysis.</description>
   </outputAnalysis>
   !!]
-  type, extends(outputAnalysisLuminosityFunctionHalpha) :: outputAnalysisLuminosityFunctionGunawardhana2013SDSS
+  type, extends(outputAnalysisLuminosityFunctionOII) :: outputAnalysisLuminosityFunctionOIIFavole2024SDSS
      !!{
-     An SDSS H$\alpha$ luminosity function output analysis class for the \cite{gunawardhana_galaxy_2013} analysis.
+     An SDSS OII luminosity function output analysis class for the \cite{favole_galaxy_2024} analysis.
      !!}
      private
      class           (gravitationalLensingClass), pointer                     :: gravitationalLensing_            => null()
@@ -37,28 +37,28 @@ Contains a module which implements a stellar mass function output analysis class
      double precision                                                         :: randomErrorMinimum                        , randomErrorMaximum                  , &
           &                                                                      sizeSourceLensing
    contains
-     final :: luminosityFunctionGunawardhana2013SDSSDestructor
-  end type outputAnalysisLuminosityFunctionGunawardhana2013SDSS
+     final :: luminosityFunctionOIIFavole2024SDSSDestructor
+  end type outputAnalysisLuminosityFunctionOIIFavole2024SDSS
 
-  interface outputAnalysisLuminosityFunctionGunawardhana2013SDSS
+  interface outputAnalysisLuminosityFunctionOIIFavole2024SDSS
      !!{
-     Constructors for the ``luminosityFunctionGunawardhana2013SDSS'' output analysis class.
+     Constructors for the ``luminosityFunctionOIIFavole2024SDSS'' output analysis class.
      !!}
-     module procedure luminosityFunctionGunawardhana2013SDSSConstructorParameters
-     module procedure luminosityFunctionGunawardhana2013SDSSConstructorInternal
-  end interface outputAnalysisLuminosityFunctionGunawardhana2013SDSS
+     module procedure luminosityFunctionOIIFavole2024SDSSConstructorParameters
+     module procedure luminosityFunctionOIIFavole2024SDSSConstructorInternal
+  end interface outputAnalysisLuminosityFunctionOIIFavole2024SDSS
 
 contains
 
-  function luminosityFunctionGunawardhana2013SDSSConstructorParameters(parameters) result (self)
+  function luminosityFunctionOIIFavole2024SDSSConstructorParameters(parameters) result (self)
     !!{
-    Constructor for the ``luminosityFunctionGunawardhana2013SDSS'' output analysis class which takes a parameter set as input.
+    Constructor for the ``luminosityFunctionOIIFavole2024SDSS'' output analysis class which takes a parameter set as input.
     !!}
     use :: Input_Parameters              , only : inputParameter                 , inputParameters
     use :: Star_Formation_Histories    , only : starFormationHistoryClass
     use :: HII_Region_Luminosity_Functions  , only : hiiRegionLuminosityFunctionClass
     implicit none
-    type            (outputAnalysisLuminosityFunctionGunawardhana2013SDSS)                              :: self
+    type            (outputAnalysisLuminosityFunctionOIIFavole2024SDSS)                              :: self
     type            (inputParameters                                     ), intent(inout)               :: parameters
     class           (cosmologyFunctionsClass                             ), pointer                     :: cosmologyFunctions_
     class           (outputTimesClass                                    ), pointer                     :: outputTimes_
@@ -89,28 +89,28 @@ contains
       <source>parameters</source>
       <variable>randomErrorMinimum</variable>
       <defaultValue>0.1d0</defaultValue>
-      <description>The minimum random error for SDSS H$\alpha$ luminosities.</description>
+      <description>The minimum random error for SDSS OII luminosities.</description>
     </inputParameter>
     <inputParameter>
       <name>randomErrorMaximum</name>
       <source>parameters</source>
       <variable>randomErrorMaximum</variable>
       <defaultValue>0.1d0</defaultValue>
-      <description>The minimum random error for SDSS H$\alpha$ luminosities.</description>
+      <description>The minimum random error for SDSS OII luminosities.</description>
     </inputParameter>
     <inputParameter>
       <name>randomErrorPolynomialCoefficient</name>
       <source>parameters</source>
       <variable>randomErrorPolynomialCoefficient</variable>
       <defaultValue>[0.1d0]</defaultValue>
-      <description>The coefficients of the random error polynomial for SDSS H$\alpha$ luminosities.</description>
+      <description>The coefficients of the random error polynomial for SDSS OII luminosities.</description>
     </inputParameter>
     <inputParameter>
       <name>systematicErrorPolynomialCoefficient</name>
       <source>parameters</source>
       <variable>systematicErrorPolynomialCoefficient</variable>
       <defaultValue>[0.0d0]</defaultValue>
-      <description>The coefficients of the systematic error polynomial for SDSS H$\alpha$ luminosities.</description>
+      <description>The coefficients of the systematic error polynomial for SDSS OII luminosities.</description>
     </inputParameter>
     <inputParameter>
       <name>sizeSourceLensing</name>
@@ -124,21 +124,21 @@ contains
       <source>parameters</source>
       <variable>covarianceBinomialBinsPerDecade</variable>
       <defaultValue>10</defaultValue>
-      <description>The number of bins per decade of halo mass to use when constructing SDSS H$\alpha$ luminosity function covariance matrices for main branch galaxies.</description>
+      <description>The number of bins per decade of halo mass to use when constructing SDSS OII luminosity function covariance matrices for main branch galaxies.</description>
     </inputParameter>
     <inputParameter>
       <name>covarianceBinomialMassHaloMinimum</name>
       <source>parameters</source>
       <variable>covarianceBinomialMassHaloMinimum</variable>
       <defaultValue>1.0d8</defaultValue>
-      <description>The minimum halo mass to consider when constructing SDSS H$\alpha$ luminosity function covariance matrices for main branch galaxies.</description>
+      <description>The minimum halo mass to consider when constructing SDSS OII luminosity function covariance matrices for main branch galaxies.</description>
     </inputParameter>
     <inputParameter>
       <name>covarianceBinomialMassHaloMaximum</name>
       <source>parameters</source>
       <variable>covarianceBinomialMassHaloMaximum</variable>
       <defaultValue>1.0d16</defaultValue>
-      <description>The maximum halo mass to consider when constructing SDSS H$\alpha$ luminosity function covariance matrices for main branch galaxies.</description>
+      <description>The maximum halo mass to consider when constructing SDSS OII luminosity function covariance matrices for main branch galaxies.</description>
     </inputParameter>
     <inputParameter>
       <name>depthOpticalISMCoefficient</name>
@@ -154,7 +154,7 @@ contains
     <objectBuilder class="stellarSpectraDustAttenuation" name="stellarSpectraDustAttenuation_" source="parameters"/>
     !!]
     ! Build the object.
-    self=outputAnalysisLuminosityFunctionGunawardhana2013SDSS(cosmologyFunctions_,gravitationalLensing_,stellarSpectraDustAttenuation_,outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,randomErrorMinimum,randomErrorMaximum,randomErrorPolynomialCoefficient,systematicErrorPolynomialCoefficient,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,sizeSourceLensing,depthOpticalISMCoefficient)
+    self=outputAnalysisLuminosityFunctionOIIFavole2024SDSS(cosmologyFunctions_,gravitationalLensing_,stellarSpectraDustAttenuation_,outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,randomErrorMinimum,randomErrorMaximum,randomErrorPolynomialCoefficient,systematicErrorPolynomialCoefficient,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,sizeSourceLensing,depthOpticalISMCoefficient)
     !![
     <inputParametersValidate source="parameters"/>
     <objectDestructor name="cosmologyFunctions_"           />
@@ -165,24 +165,24 @@ contains
     <objectDestructor name="stellarSpectraDustAttenuation_"/>
     !!]
     return
-  end function luminosityFunctionGunawardhana2013SDSSConstructorParameters
+  end function luminosityFunctionOIIFavole2024SDSSConstructorParameters
 
-  function luminosityFunctionGunawardhana2013SDSSConstructorInternal(cosmologyFunctions_,gravitationalLensing_,stellarSpectraDustAttenuation_,outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,randomErrorMinimum,randomErrorMaximum,randomErrorPolynomialCoefficient,systematicErrorPolynomialCoefficient,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,sizeSourceLensing,depthOpticalISMCoefficient) result (self)
+  function luminosityFunctionOIIFavole2024SDSSConstructorInternal(cosmologyFunctions_,gravitationalLensing_,stellarSpectraDustAttenuation_,outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,randomErrorMinimum,randomErrorMaximum,randomErrorPolynomialCoefficient,systematicErrorPolynomialCoefficient,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,sizeSourceLensing,depthOpticalISMCoefficient) result (self)
     !!{
-    Constructor for the ``luminosityFunctionGunawardhana2013SDSS'' output analysis class for internal use.
+    Constructor for the ``luminosityFunctionOIIFavole2024SDSS'' output analysis class for internal use.
     !!}
     use :: Cosmology_Functions                   , only : cosmologyFunctionsClass                        , cosmologyFunctionsMatterLambda
     use :: Cosmology_Parameters                  , only : cosmologyParametersSimple
     use :: Galactic_Filters                      , only : galacticFilterStellarMass
     use :: Input_Paths                           , only : inputPath                                      , pathTypeDataStatic
-    use :: Geometry_Surveys                      , only : surveyGeometryGunawardhana2013SDSS
+    use :: Geometry_Surveys                      , only : surveyGeometryFavole2024SDSS
     use :: Gravitational_Lensing                 , only : gravitationalLensingClass
     use :: Output_Analysis_Distribution_Operators, only : distributionOperatorList                       , outputAnalysisDistributionOperatorGrvtnlLnsng, outputAnalysisDistributionOperatorRandomErrorPlynml, outputAnalysisDistributionOperatorSequence
     use :: Output_Analysis_Property_Operators    , only : outputAnalysisPropertyOperatorSystmtcPolynomial
     use :: Star_Formation_Histories              , only : starFormationHistoryClass
     use :: HII_Region_Luminosity_Functions       , only : hiiRegionLuminosityFunctionClass
     implicit none
-    type            (outputAnalysisLuminosityFunctionGunawardhana2013SDSS)                              :: self
+    type            (outputAnalysisLuminosityFunctionOIIFavole2024SDSS)                              :: self
     class           (cosmologyFunctionsClass                             ), intent(in   ), target       :: cosmologyFunctions_
     class           (outputTimesClass                                    ), intent(inout), target       :: outputTimes_
     class           (gravitationalLensingClass                           ), intent(in   ), target       :: gravitationalLensing_
@@ -195,7 +195,7 @@ contains
     integer                                                               , intent(in   )               :: covarianceBinomialBinsPerDecade
     double precision                                                      , intent(in   )               :: covarianceBinomialMassHaloMinimum                   , covarianceBinomialMassHaloMaximum
     type            (galacticFilterStellarMass                           )               , pointer      :: galacticFilter_
-    type            (surveyGeometryGunawardhana2013SDSS                  )               , pointer      :: surveyGeometry_
+    type            (surveyGeometryFavole2024SDSS                  )               , pointer      :: surveyGeometry_
     type            (outputAnalysisPropertyOperatorSystmtcPolynomial     )               , pointer      :: outputAnalysisPropertyOperator_
     type            (outputAnalysisDistributionOperatorRandomErrorPlynml )               , pointer      :: outputAnalysisDistributionOperatorRandomErrorPlynml_
     type            (outputAnalysisDistributionOperatorGrvtnlLnsng       )               , pointer      :: outputAnalysisDistributionOperatorGrvtnlLnsng_
@@ -219,11 +219,11 @@ contains
     <referenceConstruct object="cosmologyParametersData">
      <constructor>
       cosmologyParametersSimple     (                            &amp;
-        &amp;                        OmegaMatter    = 0.30000d0, &amp;
-        &amp;                        OmegaDarkEnergy= 0.70000d0, &amp;
-        &amp;                        HubbleConstant =70.00000d0, &amp;
+        &amp;                        OmegaMatter    = 0.30710d0, &amp;
+        &amp;                        OmegaDarkEnergy= 0.69280d0, &amp;
+        &amp;                        HubbleConstant =67.77000d0, &amp;
         &amp;                        temperatureCMB = 2.72548d0, &amp;
-        &amp;                        OmegaBaryon    = 0.04550d0  &amp;
+        &amp;                        OmegaBaryon    = 0.048206d0  &amp;
         &amp;                       )
      </constructor>
     </referenceConstruct>
@@ -235,10 +235,10 @@ contains
      </constructor>
     </referenceConstruct>
     !!]
-    ! Build the SDSS survey geometry of Gunawardhana et al. (2013).
+    ! Build the SDSS survey geometry of Favole et al. (2024).
     allocate(surveyGeometry_)
     !![
-    <referenceConstruct object="surveyGeometry_" constructor="surveyGeometryGunawardhana2013SDSS(cosmologyFunctionsData)"/>
+    <referenceConstruct object="surveyGeometry_" constructor="surveyGeometryFavole2024SDSS(cosmologyFunctionsData)"/>
     !!]
     ! Create property operators.
     !! Systematic error model.
@@ -289,12 +289,11 @@ contains
     </referenceConstruct>
     !!]
     ! Build the object.
-    self%outputAnalysisLuminosityFunctionHalpha=                                                                                                                      &
-         & outputAnalysisLuminosityFunctionHalpha(                                                                                                                    &
-         &                                  var_str('Gunawardhana2013SDSS'                                                          )                               , &
-         &                                  var_str('H$\alpha$ luminosity function for the Gunawardhana et al. (2013) SDSS analysis')                               , &
-         &                                  char(inputPath(pathTypeDataStatic)//'/observations/luminosityFunctions/hAlphaLuminosityFunctionGunawardhana13SDSS.hdf5'), &
-         &                                  .false.                                                                                                                 , &
+    self%outputAnalysisLuminosityFunctionOII=                                                                                                                      &
+         & outputAnalysisLuminosityFunctionOII(                                                                                                                    &
+         &                                  var_str('FavoleOII2024SDSS'                                                          )                               , &
+         &                                  var_str('OII luminosity function for the Favole et al. (2024) SDSS analysis')                               , &
+         &                                  char(inputPath(pathTypeDataStatic)//'/observations/luminosityFunctions/oIILuminosityFunctionFavole24SDSS.hdf5'), &
          &                                  depthOpticalISMCoefficient                                                                                              , &
          &                                  galacticFilter_                                                                                                         , &
          &                                  surveyGeometry_                                                                                                         , &
@@ -323,18 +322,18 @@ contains
     !!]
     nullify(distributionOperatorSequence)
     return
-  end function luminosityFunctionGunawardhana2013SDSSConstructorInternal
+  end function luminosityFunctionOIIFavole2024SDSSConstructorInternal
 
-  subroutine luminosityFunctionGunawardhana2013SDSSDestructor(self)
+  subroutine luminosityFunctionOIIFavole2024SDSSDestructor(self)
     !!{
-    Destructor for the ``luminosityFunctionGunawardhana2013SDSS'' output analysis class.
+    Destructor for the ``luminosityFunctionOIIFavole2024SDSS'' output analysis class.
     !!}
     implicit none
-    type(outputAnalysisLuminosityFunctionGunawardhana2013SDSS), intent(inout) :: self
+    type(outputAnalysisLuminosityFunctionOIIFavole2024SDSS), intent(inout) :: self
 
     !![
     <objectDestructor name="self%gravitationalLensing_"/>
     !!]
     return
-  end subroutine luminosityFunctionGunawardhana2013SDSSDestructor
+  end subroutine luminosityFunctionOIIFavole2024SDSSDestructor
   

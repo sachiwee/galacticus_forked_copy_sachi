@@ -18,91 +18,88 @@
 !!    along with Galacticus.  If not, see <http://www.gnu.org/licenses/>.
 
 !!{
-Contains a module which implements an output analysis property extractor class that scalarizes one element from an array node property extractor.
+Contains a module which implements an output analysis property extractor class that scalarizes sum from an array node property extractor.
 !!}
 
   !![
-  <nodePropertyExtractor name="nodePropertyExtractorScalarizer">
-   <description>An output analysis property extractor class that scalarizes one element from an array node property extractor.</description>
+  <nodePropertyExtractor name="nodePropertyExtractorScalarizerLuminosity">
+   <description>An output analysis property extractor class that scalarizes sum of from an array node property extractor.</description>
   </nodePropertyExtractor>
   !!]
-  type, extends(nodePropertyExtractorScalar) :: nodePropertyExtractorScalarizer
+  type, extends(nodePropertyExtractorScalar) :: nodePropertyExtractorScalarizerLuminosity
      !!{
-     A property extractor output analysis class that scalarizes one element from an array node property extractor.
+     A property extractor output analysis class that scalarizes to return sum of an array node property extractor.
      !!}
      private
-     integer                                      :: item                            , element
+     integer                                      :: item                            
      class  (nodePropertyExtractorClass), pointer :: nodePropertyExtractor_ => null()
    contains
-     final     ::                scalarizerDestructor
-     procedure :: extract     => scalarizerExtract
-     procedure :: name        => scalarizerName
-     procedure :: description => scalarizerDescription
-     procedure :: unitsInSI   => scalarizerUnitsInSI
-  end type nodePropertyExtractorScalarizer
+     final     ::                scalarizerLuminosityDestructor
+     procedure :: extract     => scalarizerLuminosityExtract
+     procedure :: quantity    => scalarizerLuminosityQuantity
+     procedure :: name        => scalarizerLuminosityName
+     procedure :: description => scalarizerLuminosityDescription
+     procedure :: unitsInSI   => scalarizerLuminosityUnitsInSI
+  end type nodePropertyExtractorScalarizerLuminosity
 
-  interface nodePropertyExtractorScalarizer
+  interface nodePropertyExtractorScalarizerLuminosity
      !!{
      Constructors for the ``scalarizer'' output analysis class.
      !!}
-     module procedure scalarizerConstructorParameters
-     module procedure scalarizerConstructorInternal
-  end interface nodePropertyExtractorScalarizer
+     module procedure scalarizerLuminosityConstructorParameters
+     module procedure scalarizerLuminosityConstructorInternal
+  end interface nodePropertyExtractorScalarizerLuminosity
 
 contains
 
-  function scalarizerConstructorParameters(parameters) result(self)
+  function scalarizerLuminosityConstructorParameters(parameters) result(self)
     !!{
     Constructor for the ``scalarizer'' output analysis property extractor class which takes a parameter set as input.
     !!}
     use :: Input_Parameters, only : inputParameters
     implicit none
-    type   (nodePropertyExtractorScalarizer)                :: self
+    type   (nodePropertyExtractorScalarizerLuminosity)                :: self
     type   (inputParameters                ), intent(inout) :: parameters
     class  (nodePropertyExtractorClass     ), pointer       :: nodePropertyExtractor_
-    integer                                                 :: item                  , element
+    integer                                                 :: item                  
 
     !![
     <objectBuilder class="nodePropertyExtractor" name="nodePropertyExtractor_" source="parameters"/>
-    <inputParameter>
-      <name>element</name>
-      <description>The element to scalarize from the array.</description>
-      <source>parameters</source>
-    </inputParameter>
     !!]
     select type (nodePropertyExtractor_)
     class is (nodePropertyExtractorArray)
        !![
        <inputParameter>
-	 <name>item</name>
-	 <description>The item to scalarize from the array.</description>
-	 <source>parameters</source>
+         <name>item</name>
+         <description>The item to scalarize from the array.</description>
+         <source>parameters</source>
        </inputParameter>
        !!]
+    class is (nodePropertyExtractorTuple)
+       ! This is as expected.
     class default
        ! "item" is not relevant for non-array extractors.
        item=-1
     end select
-    self=nodePropertyExtractorScalarizer(item,element,nodePropertyExtractor_)
+    self=nodePropertyExtractorScalarizerLuminosity(item,nodePropertyExtractor_)
     !![
     <inputParametersValidate source="parameters"/>
     !!]
     return
-  end function scalarizerConstructorParameters
+  end function scalarizerLuminosityConstructorParameters
 
-  function scalarizerConstructorInternal(item,element,nodePropertyExtractor_) result(self)
+  function scalarizerLuminosityConstructorInternal(item,nodePropertyExtractor_) result(self)
     !!{
     Internal constructor for the {\normalfont \ttfamily scalarizer} property extractor class.
     !!}
     use :: Error, only : Error_Report
     implicit none
-    type   (nodePropertyExtractorScalarizer)                        :: self
-    integer                                 , intent(in   )         :: item                  , element
+    type   (nodePropertyExtractorScalarizerLuminosity)                        :: self
+    integer                                 , intent(in   )         :: item                 
     class  (nodePropertyExtractorClass     ), intent(in   ), target :: nodePropertyExtractor_
     !![
-    <constructorAssign variables="item, element, *nodePropertyExtractor_"/>
+    <constructorAssign variables="item, *nodePropertyExtractor_"/>
     !!]
-
     select type (nodePropertyExtractor__ => self%nodePropertyExtractor_)
     class is (nodePropertyExtractorArray)
        ! This is as expected.
@@ -112,120 +109,140 @@ contains
        call Error_Report('class must be nodePropertyExtractorArray'//{introspection:location})
     end select
     return
-  end function scalarizerConstructorInternal
+  end function scalarizerLuminosityConstructorInternal
 
-  subroutine scalarizerDestructor(self)
+  subroutine scalarizerLuminosityDestructor(self)
     !!{
     Destructor for the {\normalfont \ttfamily scalarizer} property extractor class.
     !!}
     implicit none
-    type(nodePropertyExtractorScalarizer), intent(inout) :: self
-
+    type(nodePropertyExtractorScalarizerLuminosity), intent(inout) :: self
     !![
     <objectDestructor name="self%nodePropertyExtractor_"/>
     !!]
     return
-  end subroutine scalarizerDestructor
+  end subroutine scalarizerLuminosityDestructor
 
-  double precision function scalarizerExtract(self,node,instance)
+  double precision function scalarizerLuminosityExtract(self,node,instance)
     !!{
     Implement a scalarizer output analysis.
     !!}
     use :: Error           , only : Error_Report
     use :: Galacticus_Nodes, only : nodeComponentBasic, treeNode
     implicit none
-    class           (nodePropertyExtractorScalarizer), intent(inout), target         :: self
+    class           (nodePropertyExtractorScalarizerLuminosity), intent(inout), target         :: self
     type            (treeNode                       ), intent(inout), target         :: node
     type            (multiCounter                   ), intent(inout), optional       :: instance
     class           (nodeComponentBasic             ), pointer                       :: basic
     double precision                                 , allocatable  , dimension(:,:) :: array
     double precision                                 , allocatable  , dimension(  :) :: tuple
-
+   
     select type (nodePropertyExtractor__ => self%nodePropertyExtractor_)
     class is (nodePropertyExtractorArray)
        basic => node%basic()
        if (self%item    > nodePropertyExtractor__%size        (basic%time())) call Error_Report('item exceeds size of array'    //{introspection:location})
-       if (self%element > nodePropertyExtractor__%elementCount(basic%time())) call Error_Report('element exceeds count of array'//{introspection:location})
        array            =nodePropertyExtractor__%extract(node     ,basic%time   (),instance)
-       scalarizerExtract=array                          (self%item,self %element           )
-    class is (nodePropertyExtractorTuple)
+       scalarizerLuminosityExtract=sum(array(self%item, :))
+     class is (nodePropertyExtractorTuple)
        basic => node%basic()
-       if (self%element > nodePropertyExtractor__%elementCount(basic%time())) call Error_Report('element exceeds count of tuple'//{introspection:location})
+       if (self%item    > nodePropertyExtractor__%elementCount(basic%time())) call Error_Report('item exceeds count of tuple'//{introspection:location})
        tuple            =nodePropertyExtractor__%extract(node     ,basic%time   (),instance)
-       scalarizerExtract=tuple                          (          self %element           )
+       scalarizerLuminosityExtract=sum(tuple(:))
      class default
-       scalarizerExtract=0.0d0
+       scalarizerLuminosityExtract=0.0d0
        call Error_Report('class must be nodePropertyExtractorArray'//{introspection:location})
     end select
     return
-  end function scalarizerExtract
-  
-   
-  function scalarizerName(self)
+  end function scalarizerLuminosityExtract
+
+  function scalarizerLuminosityQuantity(self)
+  !!{
+    Return the quantity of the scalarizer property.
+  !!}
+    use :: Error, only : Error_Report
+    use :: Output_Analyses_Options, only : enumerationOutputAnalysisPropertyQuantityType
+    implicit none
+    type (enumerationOutputAnalysisPropertyQuantityType  )              :: scalarizerLuminosityQuantity
+    class(nodePropertyExtractorScalarizerLuminosity), intent(inout)     :: self
+    type (enumerationOutputAnalysisPropertyQuantityType  ) :: quantity
+
+    select type (nodePropertyExtractor__ => self%nodePropertyExtractor_)
+    class is (nodePropertyExtractorArray)
+       scalarizerLuminosityQuantity=nodePropertyExtractor__%quantity()
+    class is (nodePropertyExtractorTuple)
+       scalarizerLuminosityQuantity=nodePropertyExtractor__%quantity()
+    class default
+       call Error_Report('class must be nodePropertyExtractorArray'//{introspection:location})
+    end select
+    return
+   end function scalarizerLuminosityQuantity
+
+
+  function scalarizerLuminosityName(self)
     !!{
     Return the name of the scalarizer property.
     !!}
     use :: Error, only : Error_Report
     implicit none
-    type (varying_string                 )                              :: scalarizerName
-    class(nodePropertyExtractorScalarizer), intent(inout)               :: self
+    type (varying_string                 )                              :: scalarizerLuminosityName
+    class(nodePropertyExtractorScalarizerLuminosity), intent(inout)               :: self
     type (varying_string                 ), allocatable  , dimension(:) :: names
-    
     select type (nodePropertyExtractor__ => self%nodePropertyExtractor_)
     class is (nodePropertyExtractorArray)
        call nodePropertyExtractor__%names(             names)
-       scalarizerName=names(self%element)
+       scalarizerLuminosityName=names(self%item)
     class is (nodePropertyExtractorTuple)
        call nodePropertyExtractor__%names(-huge(0.0d0),names)
-       scalarizerName=names(self%element)
+       scalarizerLuminosityName=names(self%item)
     class default
        call Error_Report('class must be nodePropertyExtractorArray'//{introspection:location})
     end select
     return
-   end function scalarizerName
+   end function scalarizerLuminosityName
 
-  function scalarizerDescription(self)
+  function scalarizerLuminosityDescription(self)
     !!{
     Return a description of the scalarizer property.
     !!}
     use :: Error, only : Error_Report
     implicit none
-    type (varying_string                 )                              :: scalarizerDescription
-    class(nodePropertyExtractorScalarizer), intent(inout)               :: self
+    type (varying_string                 )                              :: scalarizerLuminosityDescription
+    class(nodePropertyExtractorScalarizerLuminosity), intent(inout)               :: self
     type (varying_string                 ), allocatable  , dimension(:) :: descriptions
 
     select type (nodePropertyExtractor__ => self%nodePropertyExtractor_)
     class is (nodePropertyExtractorArray)
        call nodePropertyExtractor__%descriptions(             descriptions)
-       scalarizerDescription=descriptions(self%element)
+       scalarizerLuminosityDescription='Scalarize luminosity emission'
     class is (nodePropertyExtractorTuple)
        call nodePropertyExtractor__%descriptions(-huge(0.0d0),descriptions)
-       scalarizerDescription=descriptions(self%element)
+       scalarizerLuminosityDescription='Scalarize luminosity emission'
     class default
        call Error_Report('class must be nodePropertyExtractorArray'//{introspection:location})
     end select
     return
-  end function scalarizerDescription
+  end function scalarizerLuminosityDescription
 
-  double precision function scalarizerUnitsInSI(self)
+  double precision function scalarizerLuminosityUnitsInSI(self)
     !!{
     Return the units of the scalarizer property in the SI system.
     !!}
     use :: Error, only : Error_Report
+    use :: Numerical_Constants_Units, only : ergs
     implicit none
-    class           (nodePropertyExtractorScalarizer), intent(inout)               :: self
+    class           (nodePropertyExtractorScalarizerLuminosity), intent(inout)               :: self
     double precision                                 , allocatable  , dimension(:) :: unitsInSI
 
     select type (nodePropertyExtractor__ => self%nodePropertyExtractor_)
     class is (nodePropertyExtractorArray)
        unitsInSI          =nodePropertyExtractor__%unitsInSI(            )
-       scalarizerUnitsInSI=unitsInSI                        (self%element)
+       scalarizerLuminosityUnitsInSI=ergs
     class is (nodePropertyExtractorTuple)
        unitsInSI          =nodePropertyExtractor__%unitsInSI(-huge(0.0d0))
-       scalarizerUnitsInSI=unitsInSI                        (self%element)
+       scalarizerLuminosityUnitsInSI=ergs
     class default
-       scalarizerUnitsInSI=0.0d0
+       scalarizerLuminosityUnitsInSI=0.0d0
        call Error_Report('class must be nodePropertyExtractorArray'//{introspection:location})
     end select
     return
-  end function scalarizerUnitsInSI
+  end function scalarizerLuminosityUnitsInSI

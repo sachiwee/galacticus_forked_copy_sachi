@@ -28,11 +28,11 @@ Contains a module which implements a luminosity function output analysis class.
   use :: Output_Times                     , only : outputTimesClass
   use :: HII_Region_Luminosity_Functions  , only : hiiRegionLuminosityFunctionClass
   !![
-  <outputAnalysis name="outputAnalysisLuminosityFunctionHalpha">
+  <outputAnalysis name="outputAnalysisLuminosityFunctionOII">
    <description>A luminosity function output analysis class.</description>
   </outputAnalysis>
   !!]
-  type, extends(outputAnalysisVolumeFunction1D) :: outputAnalysisLuminosityFunctionHalpha
+  type, extends(outputAnalysisVolumeFunction1D) :: outputAnalysisLuminosityFunctionOII
      !!{
      A luminosity function output analysis class.
      !!}
@@ -44,30 +44,29 @@ Contains a module which implements a luminosity function output analysis class.
      class           (hiiRegionLuminosityFunctionClass), pointer                     :: hiiRegionLuminosityFunction_   => null()
      double precision                                    , allocatable, dimension(:) :: luminosities
      double precision                                                                :: depthOpticalISMCoefficient
-     logical                                                                         :: includeNitrogenII
    contains
-     final :: luminosityFunctionHalphaDestructor
-  end type outputAnalysisLuminosityFunctionHalpha
+     final :: luminosityFunctionOIIDestructor
+  end type outputAnalysisLuminosityFunctionOII
 
-  interface outputAnalysisLuminosityFunctionHalpha
+  interface outputAnalysisLuminosityFunctionOII
      !!{
-     Constructors for the ``luminosityFunctionHalpha'' output analysis class.
+     Constructors for the ``luminosityFunctionOII'' output analysis class.
      !!}
-     module procedure luminosityFunctionHalphaConstructorParameters
-     module procedure luminosityFunctionHalphaConstructorInternal
-     module procedure luminosityFunctionHalphaConstructorFile
-  end interface outputAnalysisLuminosityFunctionHalpha
+     module procedure luminosityFunctionOIIConstructorParameters
+     module procedure luminosityFunctionOIIConstructorInternal
+     module procedure luminosityFunctionOIIConstructorFile
+  end interface outputAnalysisLuminosityFunctionOII
 
 contains
 
-  function luminosityFunctionHalphaConstructorParameters(parameters) result (self)
+  function luminosityFunctionOIIConstructorParameters(parameters) result (self)
     !!{
-    Constructor for the ``luminosityFunctionHalpha'' output analysis class which takes a parameter set as input.
+    Constructor for the ``luminosityFunctionOII'' output analysis class which takes a parameter set as input.
     !!}
     use :: Error                         , only : Error_Report
     use :: Input_Parameters              , only : inputParameter                 , inputParameters
     implicit none
-    type            (outputAnalysisLuminosityFunctionHalpha )                              :: self
+    type            (outputAnalysisLuminosityFunctionOII )                              :: self
     type            (inputParameters                        ), intent(inout)               :: parameters
     class           (galacticFilterClass                    ), pointer                     :: galacticFilter_
     class           (surveyGeometryClass                    ), pointer                     :: surveyGeometry_
@@ -87,7 +86,6 @@ contains
     type            (inputParameters                        )                              :: dataAnalysisParameters
     type            (varying_string                         )                              :: label                              , comment                          , &
          &                                                                                    targetLabel
-    logical                                                                                :: includeNitrogenII
     ! Check and read parameters.
     dataAnalysisParameters=parameters%subParameters('dataAnalysis',requirePresent=.false.,requireValue=.false.)
     allocate(luminosities(parameters%count('luminosities')))
@@ -124,12 +122,6 @@ contains
       <source>parameters</source>
       <defaultValue>1.0d16</defaultValue>
       <description>The maximum halo mass to consider when constructing luminosity function covariance matrices for main branch galaxies.</description>
-    </inputParameter>
-    <inputParameter>
-      <name>includeNitrogenII</name>
-      <source>parameters</source>
-      <defaultValue>.false.</defaultValue>
-      <description>If true, include contamination by the [NII] (6548\AA $+$ 6584\AA) doublet.</description>
     </inputParameter>
     <inputParameter>
       <name>depthOpticalISMCoefficient</name>
@@ -186,7 +178,7 @@ contains
     <objectBuilder class="hiiRegionLuminosityFunction"        name="hiiRegionLuminosityFunction_"        source="parameters"            />
     <objectBuilder class="stellarSpectraDustAttenuation"      name="stellarSpectraDustAttenuation_"      source="parameters"            />
     <conditionalCall>
-     <call>self=outputAnalysisLuminosityFunctionHalpha(label,comment,luminosities,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_, outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum{conditions})</call>
+     <call>self=outputAnalysisLuminosityFunctionOII(label,comment,luminosities,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_, outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum{conditions})</call>
      <argument name="targetLabel"              value="targetLabel"              parameterPresent="parameters"/>
      <argument name="functionValueTarget"      value="functionValueTarget"      parameterPresent="parameters"/>
      <argument name="functionCovarianceTarget" value="functionCovarianceTarget" parameterPresent="parameters"/>
@@ -204,19 +196,18 @@ contains
     <objectDestructor name="stellarSpectraDustAttenuation_"     />
     !!]
     return
-  end function luminosityFunctionHalphaConstructorParameters
+  end function luminosityFunctionOIIConstructorParameters
 
-  function luminosityFunctionHalphaConstructorFile(label,comment, fileName,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_, outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum) result (self)
+  function luminosityFunctionOIIConstructorFile(label,comment, fileName,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_, outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum) result (self)
     !!{
-    Constructor for the ``luminosityFunctionHalpha'' output analysis class which reads bin information from a standard format file.
+    Constructor for the ``luminosityFunctionOII'' output analysis class which reads bin information from a standard format file.
     !!}
     use :: HDF5_Access                   , only : hdf5Access
     use :: IO_HDF5                       , only : hdf5Object
     implicit none
-    type            (outputAnalysisLuminosityFunctionHalpha )                              :: self
+    type            (outputAnalysisLuminosityFunctionOII )                              :: self
     type            (varying_string                         ), intent(in   )               :: label                              , comment
     character       (len=*                                  ), intent(in   )               :: fileName
-    logical                                                  , intent(in   )               :: includeNitrogenII
     double precision                                         , intent(in   )               :: depthOpticalISMCoefficient
     class           (galacticFilterClass                    ), intent(in   ) , target      :: galacticFilter_
     class           (surveyGeometryClass                    ), intent(in   ) , target      :: surveyGeometry_
@@ -258,18 +249,18 @@ contains
     ! Construct the object.
     !![
     <conditionalCall>
-     <call>self=outputAnalysisLuminosityFunctionHalpha(label,comment,luminosities,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum{conditions})</call>
+     <call>self=outputAnalysisLuminosityFunctionOII(label,comment,luminosities,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum{conditions})</call>
      <argument name="targetLabel"              value="targetLabel"              condition="haveTarget"/>
      <argument name="functionValueTarget"      value="functionValueTarget"      condition="haveTarget"/>
      <argument name="functionCovarianceTarget" value="functionCovarianceTarget" condition="haveTarget"/>
     </conditionalCall>
     !!]
     return
-  end function luminosityFunctionHalphaConstructorFile
+  end function luminosityFunctionOIIConstructorFile
 
-  function luminosityFunctionHalphaConstructorInternal(label,comment,luminosities,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_, outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,targetLabel,functionValueTarget,functionCovarianceTarget) result(self)
+  function luminosityFunctionOIIConstructorInternal(label,comment,luminosities,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_, outputTimes_,starFormationHistory_,hiiRegionLuminosityFunction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,targetLabel,functionValueTarget,functionCovarianceTarget) result(self)
     !!{
-    Constructor for the ``luminosityFunctionHalpha'' output analysis class which takes a parameter set as input.
+    Constructor for the ``luminosityFunctionOII'' output analysis class which takes a parameter set as input.
     !!}
     use :: Cosmology_Functions                     , only : cosmologyFunctionsClass
     use :: Galactic_Filters                        , only : galacticFilterClass
@@ -291,9 +282,8 @@ contains
     use :: Output_Times                            , only : outputTimesClass
     use :: Galactic_Structure_Options              , only : componentTypeDisk, componentTypeSpheroid, componentTypeAll, enumerationComponentTypeType
     implicit none
-    type            (outputAnalysisLuminosityFunctionHalpha         )                                          :: self
+    type            (outputAnalysisLuminosityFunctionOII         )                                          :: self
     type            (varying_string                                 ), intent(in   )                           :: label   , comment
-    logical                                                          , intent(in   )                           :: includeNitrogenII
     double precision                                                 , intent(in   )          , dimension(:  ) :: luminosities
     double precision                                                 , intent(in   )                           :: depthOpticalISMCoefficient
     class           (galacticFilterClass                            ), intent(in   ), target                   :: galacticFilter_
@@ -331,7 +321,7 @@ contains
     integer         (c_size_t                                       ), parameter                               :: bufferCountMinimum                              =5
     integer         (c_size_t                                       )                                          :: iBin                                                  , bufferCount
     !![
-    <constructorAssign variables="label, comment, luminosities, includeNitrogenII, depthOpticalISMCoefficient, *galacticFilter_, *surveyGeometry_, *stellarSpectraDustAttenuation_, *cosmologyFunctions_, *cosmologyFunctionsData, *outputAnalysisPropertyOperator_,*outputAnalysisDistributionOperator_,*outputTimes_,*starFormationHistory_,*hiiRegionLuminosityFunction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,targetLabel,functionValueTarget,functionCovarianceTarget"/>
+    <constructorAssign variables="label, comment, luminosities, depthOpticalISMCoefficient, *galacticFilter_, *surveyGeometry_, *stellarSpectraDustAttenuation_, *cosmologyFunctions_, *cosmologyFunctionsData, *outputAnalysisPropertyOperator_,*outputAnalysisDistributionOperator_,*outputTimes_,*starFormationHistory_,*hiiRegionLuminosityFunction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,targetLabel,functionValueTarget,functionCovarianceTarget"/>
     !!]
     ! Compute weights that apply to each output redshift.
     self%binCount=size(luminosities,kind=c_size_t)
@@ -341,15 +331,9 @@ contains
     end do
     ! Create a luminosity property extractor.
     allocate(nodePropertyExtractorLuminosityEmissionLine_)
-    if (includeNitrogenII) then
-       allocate(lineNames(3))
-       lineNames(1)=var_str('balmerAlpha6565')
-       lineNames(2)=var_str('nitrogenII6550' )
-       lineNames(3)=var_str('nitrogenII6585' )
-    else
-       allocate(lineNames(1))
-       lineNames(1)=var_str('balmerAlpha6565')
-    end if
+    allocate(lineNames(2))
+    lineNames(1)=var_str('oxygenII3727' )
+    lineNames(2)=var_str('oxygenII3730' )
     cloudyTableFileName='/central/groups/carnegie_poc/sweeraso/Galacticus_analysesHII/datasets/static/hiiRegions/emissionLineLuminosities_BC2003_highResolution_imfChabrier.hdf5'
     component=componentTypeAll
     toleranceRelative=1.0d-3
@@ -422,10 +406,10 @@ contains
     ! Construct the object.
     self%outputAnalysisVolumeFunction1D=                                                                                               &
          & outputAnalysisVolumeFunction1D(                                                                                             &
-         &                                'luminosityFunctionHalpha'//label                                                          , &
+         &                                'luminosityFunctionOII'//label                                                          , &
          &                                comment                                                                                    , &
          &                                var_str('luminosity'                                                                      ), &
-         &                                var_str('Hα luminosity at the bin center'                                                 ), &
+         &                                var_str('OII luminosity at the bin center'                                                 ), &
          &                                var_str('ergs/s'                                                                          ), &
          &                                ergs                                                                                       , &
          &                                var_str('luminosityFunction'                                                              ), &
@@ -448,8 +432,8 @@ contains
          &                                covarianceBinomialMassHaloMinimum                                                          , &
          &                                covarianceBinomialMassHaloMaximum                                                          , &
          &                                .false.                                                                                    , &
-         &                                var_str('$L_{\mathrm{H}\alpha}$ [ergs/s]'                                                 ), &
-         &                                var_str('$\mathrm{d}n/\mathrm{d}\log_\mathrm{e} L_{\mathrm{H}\alpha}$ [$_\chi$Mpc$^{-3}$]'), &
+         &                                var_str('$L_{OII}$ [ergs/s]'                                                 ), &
+         &                                var_str('$\mathrm{d}n/\mathrm{d}\log_\mathrm{e} L_{OII}$ [$_\chi$Mpc$^{-3}$]'), &
          &                                .true.                                                                                     , &
          &                                .true.                                                                                     , &
          &                                targetLabel                                                                                , &
@@ -471,13 +455,13 @@ contains
     nullify(propertyOperatorSequence)
     nullify(normalizerSequence      )
     return
-  end function luminosityFunctionHalphaConstructorInternal
+  end function luminosityFunctionOIIConstructorInternal
 
-  subroutine luminosityFunctionHalphaDestructor(self)
+  subroutine luminosityFunctionOIIDestructor(self)
     !!{
-    Destructor for  the ``luminosityFunctionHalpha'' output analysis class.
+    Destructor for  the ``luminosityFunctionOII'' output analysis class.
     !!}
-    type(outputAnalysisLuminosityFunctionHalpha), intent(inout) :: self
+    type(outputAnalysisLuminosityFunctionOII), intent(inout) :: self
 
     !![
     <objectDestructor name="self%surveyGeometry_"               />
@@ -489,5 +473,5 @@ contains
     <objectDestructor name="self%hiiRegionLuminosityFunction_"  />
     !!]
     return
-  end subroutine luminosityFunctionHalphaDestructor
+  end subroutine luminosityFunctionOIIDestructor
 
