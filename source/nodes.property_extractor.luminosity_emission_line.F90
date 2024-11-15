@@ -28,6 +28,7 @@
   use :: HII_Region_Luminosity_Functions, only : hiiRegionLuminosityFunctionClass
   use :: Star_Formation_Histories       , only : starFormationHistoryClass
   use :: hii_Region_Density_Distributions,only : hiiRegionDensityDistributionClass  
+  use :: hii_Region_Escape_Fraction      , only: hiiRegionEscapeFractionClass
   type:: emissionLineLuminosityTemplate
      !!{
      Type used to store luminosity templates for emission lines.
@@ -55,6 +56,7 @@
      class           (outputTimesClass                 ), pointer                       :: outputTimes_                         => null()
      class           (hiiRegionLuminosityFunctionClass ), pointer                       :: hiiRegionLuminosityFunction_         => null()
      class           (hiiRegionDensityDistributionClass), pointer                       :: hiiRegionDensityDistribution_        => null()
+     class           (hiiRegionEscapeFractionClass     ), pointer                       :: hiiRegionEscapeFraction_             => null()
      type            (enumerationComponentTypeType     )                                :: component
      integer                                                                            :: countWavelengths                             , countLines
      type            (varying_string                   ), allocatable, dimension(:    ) :: lineNames                                    , names_                      , &
@@ -113,6 +115,7 @@ contains
     class           (outputTimesClass                           ), pointer                     :: outputTimes_
     class           (hiiRegionLuminosityFunctionClass           ), pointer                     :: hiiRegionLuminosityFunction_
     class           (hiiRegionDensityDistributionClass          ), pointer                     :: hiiRegionDensityDistribution_
+    class           (hiiRegionEscapeFractionClass               ), pointer                     :: hiiRegionEscapeFraction_
     type            (varying_string                             ), allocatable  , dimension(:) :: lineNames
     type            (varying_string                             )                              :: component                   , cloudyTableFileName
     double precision                                                                           :: toleranceRelative
@@ -145,19 +148,21 @@ contains
     <objectBuilder class="outputTimes"                  name="outputTimes_"                  source="parameters"/>
     <objectBuilder class="hiiRegionLuminosityFunction"  name="hiiRegionLuminosityFunction_"  source="parameters"/>
     <objectBuilder class="hiiRegionDensityDistribution" name="hiiRegionDensityDistribution_" source="parameters"/>
+    <objectBuilder class="hiiRegionEscapeFraction"      name="hiiRegionEscapeFraction_"      source="parameters"/>
     !!]
-    self=nodePropertyExtractorLuminosityEmissionLine(cloudyTableFileName,enumerationComponentTypeEncode(char(component),includesPrefix=.false.),lineNames,toleranceRelative,starFormationHistory_,outputTimes_,hiiRegionLuminosityFunction_,hiiRegionDensityDistribution_)
+    self=nodePropertyExtractorLuminosityEmissionLine(cloudyTableFileName,enumerationComponentTypeEncode(char(component),includesPrefix=.false.),lineNames,toleranceRelative,starFormationHistory_,outputTimes_,hiiRegionLuminosityFunction_,hiiRegionDensityDistribution_,hiiRegionEscapeFraction_)
     !![
     <inputParametersValidate source="parameters"/>
     <objectDestructor name="starFormationHistory_"       />
     <objectDestructor name="outputTimes_"                />
     <objectDestructor name="hiiRegionLuminosityFunction_"/>
     <objectDestructor name="hiiRegionDensityDistribution_"/>
+    <objectDestructor name="hiiRegionEscapeFraction_"/>
     !!]
     return
   end function emissionLineLuminosityConstructorParameters
 
-  function emissionLineLuminosityConstructorInternal(cloudyTableFileName,component,lineNames,toleranceRelative,starFormationHistory_,outputTimes_,hiiRegionLuminosityFunction_,hiiRegionDensityDistribution_) result(self)
+  function emissionLineLuminosityConstructorInternal(cloudyTableFileName,component,lineNames,toleranceRelative,starFormationHistory_,outputTimes_,hiiRegionLuminosityFunction_,hiiRegionDensityDistribution_,hiiRegionEscapeFraction_) result(self)
     !!{
     Internal constructor for the {\normalfont \ttfamily sed} property extractor class.
     !!}
@@ -179,6 +184,7 @@ contains
     class           (outputTimesClass                           ), intent(in   ), target               :: outputTimes_
     class           (hiiRegionLuminosityFunctionClass           ), intent(in   ), target               :: hiiRegionLuminosityFunction_
     class           (hiiRegionDensityDistributionClass          ), intent(in   ), target               :: hiiRegionDensityDistribution_
+    class           (hiiRegionEscapeFractionClass               ), intent(in   ), target               ::hiiRegionEscapeFraction_
     double precision                                             , intent(in   )                       :: toleranceRelative    
     double precision                                             ,                                     :: deltaIonizingLuminosityHydrogen   , rateHydrogenIonizingPhotonsMinimum, &
          &                                                                                                rateHydrogenIonizingPhotonsMaximum, densityHydrogenMinimum            , &
@@ -188,7 +194,7 @@ contains
     type            (hdf5Object                                 )                                      :: emissionLinesFile                 , lines
     integer                                                                                            :: i                                 , k
     !![
-    <constructorAssign variables="cloudyTableFileName, lineNames, component, toleranceRelative, *starFormationHistory_, *outputTimes_, *hiiRegionLuminosityFunction_, *hiiRegionDensityDistribution_"/>
+    <constructorAssign variables="cloudyTableFileName, lineNames, component, toleranceRelative, *starFormationHistory_, *outputTimes_, *hiiRegionLuminosityFunction_, *hiiRegionDensityDistribution_, *hiiRegionEscapeFraction_"/>
     !!]
     if     (                                                                                                    &
          &   component /= componentTypeDisk                                                                     &
@@ -248,11 +254,14 @@ contains
        do k=1,size(densityHydrogen)
           densityHydrogenMinimum         =densityHydrogen           (k)/sqrt(deltaDensityHydrogen           )
           densityHydrogenMaximum         =densityHydrogen           (k)*sqrt(deltaDensityHydrogen           )
-          ! Accumulate the luminosity weighted by the cumulative fraction of HII regions in this luminosity interval.
-          self%luminositiesReduced=+self%luminositiesReduced                                                                                                                 &
-               &                   +self%hiiRegionLuminosityFunction_ %cumulativeDistributionFunction(rateHydrogenIonizingPhotonsMinimum,rateHydrogenIonizingPhotonsMaximum) &
-               &                   *self%hiiRegionDensityDistribution_%cumulativeDensityDistribution (            densityHydrogenMinimum,            densityHydrogenMaximum) &
-               &                   *luminosities(:,:,i,k,:)
+          do age_i,size(self%ages)
+            ! Accumulate the luminosity weighted by the cumulative fraction of HII regions in this luminosity interval.
+            self%luminositiesReduced(age_i,:,:)=+self%luminositiesReduced(age_i,:,:)                                                                                                                 &
+                  &                   +self%hiiRegionLuminosityFunction_ %cumulativeDistributionFunction(rateHydrogenIonizingPhotonsMinimum,rateHydrogenIonizingPhotonsMaximum) &
+                  &                   *self%hiiRegionDensityDistribution_%cumulativeDensityDistribution (            densityHydrogenMinimum,            densityHydrogenMaximum) &
+                  &                   *self%hiiRegionEscapeFraction_%escapeFractionMethod(self%ages(age_i))                                                                                     &
+                  &                   *luminosities(age_i,:,i,k,:)
+          end do
        end do
     end do
     ! Normalize reduced luminosities to the total fraction of HII regions in the luminosity interval spanned by the table. Also,
@@ -293,6 +302,7 @@ contains
     <objectDestructor name="self%outputTimes_"                 />
     <objectDestructor name="self%hiiRegionLuminosityFunction_" />
     <objectDestructor name="self%hiiRegionDensityDistribution_"/>
+    <objectDestructor name="self%hiiRegionEscapeFraction_"/>
     !!]
     return
   end subroutine emissionLineLuminosityDestructor
