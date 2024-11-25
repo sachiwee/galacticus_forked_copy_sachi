@@ -105,7 +105,7 @@ contains
     !type            (treeNode                      ), intent(inout), optional :: node
     !$GLC attributes unused :: node
     if(age_pop .ge. self%ageLimit) then
-      escapeFrac=0.0d0
+      escapeFrac=1.0d0
     else
       escapeFrac=self%escapeFraction
     end if
