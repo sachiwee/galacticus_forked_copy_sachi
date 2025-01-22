@@ -271,7 +271,7 @@ contains
     double precision                                                 , dimension(0:1,4)        :: interpolateFactor
     double precision                                                                           :: weight                                                  , luminosityLineAGN
     double precision                                                                           :: integral, recombinationCoefficient, rateMassAccretionSpheroid, rateMassAccretionDisk, wavelength_,nu_1240,nu_13,nu_495,nu_12,L_agn,&
-                    &                                                                             hydrogenDensity,spectralIndex ,normalizationConstant,radiativeEfficiency,blackHoleAccretionRate,rateIonizingPhotonsNormalized, rateIonizingPhotons, ionizationParam,&
+                    &                                                                             hydrogenDensity,spectralIndex ,normalizationConstant,radiativeEfficiency_disk,radiativeEfficiency_sph,blackHoleAccretionRate_disk,blackHoleAccretionRate_sph,rateIonizingPhotonsNormalized, rateIonizingPhotons, ionizationParam,&
                     &                                                                             massGas, radius, rateStarFormation, metallicityGas, stromgren_radius, denom , halfMassRadius                  
     !$GLC attributes unused :: instance
     integer         (c_size_t                                       )                          :: output
@@ -330,17 +330,21 @@ contains
     call  self%blackHoleAccretionRate_%rateAccretion(blackHole,rateMassAccretionSpheroid,rateMassAccretionDisk)
 
     !Black hole accretion rate in kg/s
-    blackHoleAccretionRate =(massSolar/gigaYear)*(rateMassAccretionSpheroid+rateMassAccretionDisk)
+    blackHoleAccretionRate_disk =(massSolar/gigaYear)*rateMassAccretionDisk
+
+    blackHoleAccretionRate_sph =(massSolar/gigaYear)*rateMassAccretionSpheroid
 
     !Radiative effciency of black hole
-    radiativeEfficiency=self%accretionDisks_%efficiencyRadiative(blackHole,rateMassAccretionSpheroid)+self%accretionDisks_%efficiencyRadiative(blackHole,rateMassAccretionDisk)
+    radiativeEfficiency_disk=self%accretionDisks_%efficiencyRadiative(blackHole,rateMassAccretionDisk)
+    radiativeEfficiency_sph=self%accretionDisks_%efficiencyRadiative(blackHole,rateMassAccretionSpheroid)
 
     !Luminosity in J/s
-    L_agn=blackHoleAccretionRate*speedLight*speedLight*radiativeEfficiency
+    L_agn=(blackHoleAccretionRate_disk*speedLight*speedLight*radiativeEfficiency_disk) &
+          & + (blackHoleAccretionRate_sph*speedLight*speedLight*radiativeEfficiency_sph)
     
     normalizationConstant=L_agn/integral
 
-    write(0,*) "black hole accretion rate kg/s ",blackHoleAccretionRate
+    write(0,*) "black hole accretion rate disk, sph kg/s ",blackHoleAccretionRate_disk, blackHoleAccretionRate_sph
     write(0,*) "nu 12 13.6 1240,  ",nu_12, "  ",nu_13,"  ",nu_1240
     write(0,*) "norm const",normalizationConstant
 
