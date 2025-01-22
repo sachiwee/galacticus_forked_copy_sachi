@@ -319,7 +319,7 @@ contains
     ! Calculate integral for AGN luminosity from 0 to infinity
     integral=((nu_12**3.0d0)/3.0d0)                                   &
              &    + (2*(SQRT(nu_495)   -  SQRT(nu_12)) )              &
-             &    - ((1.0d0/(self%alpha+1.0d0))* ( (nu_1240**(self%alpha+1.0d0)) - (nu_495**(self%alpha+1.0d0)) ) ) 
+             &    + ((1.0d0/(self%alpha+1.0d0))* ( (nu_1240**(self%alpha+1.0d0)) - (nu_495**(self%alpha+1.0d0)) ) ) 
 
     recombinationCoefficient=micro*2.6d-13
 
@@ -337,7 +337,7 @@ contains
 
     !Luminosity in J/s
     L_agn=blackHoleAccretionRate*speedLight*speedLight*radiativeEfficiency
-    L_agn=1.0d50
+    
     normalizationConstant=L_agn/integral
 
     write(0,*) "black hole accretion rate kg/s ",blackHoleAccretionRate
@@ -358,7 +358,8 @@ contains
       write(0,*) "Q norm ",rateIonizingPhotonsNormalized
       halfMassRadius=1.0d19
       write(0,*) " halfMassRadius  ", halfMassRadius
-
+      
+      !using half mass radius for now, should use Stromgren radius
       ionizationParam = rateIonizingPhotonsNormalized/(4*Pi*halfMassRadius*halfMassRadius*0.001d0*speedLight)
       write(0,*) "ionization param ",ionizationParam
       ionizationParam=log10(ionizationParam)
