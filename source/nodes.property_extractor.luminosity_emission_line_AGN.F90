@@ -52,11 +52,7 @@ Implements an emission line luminosity for AGN node property extractor class.
      double precision                                    , allocatable, dimension(:,:,:,:,:) :: luminosity
      double precision                                                 , dimension(2,3        ) :: filterExtent
      type            (interpolator                      ), allocatable, dimension(:          ) :: interpolator_
-<<<<<<< Updated upstream
-     double precision                                                                          :: alpha
-=======
      double precision                                                                          :: alpha, volume_filling_factor
->>>>>>> Stashed changes
      !$ integer      (omp_lock_kind                     )                                      :: interpolateLock
    contains
      final     ::                lmnstyEmssnLineAGNDestructor
@@ -81,18 +77,11 @@ Implements an emission line luminosity for AGN node property extractor class.
    <name>interpolants</name>
    <description>Specifies the different interpolants for AGN emission line calculations.</description>
    <indexing>1</indexing>
-<<<<<<< Updated upstream
-   <entry label="metallicity"/>
-   <entry label="density"  />
-   <entry label="spectralIndex"/>
-   <entry label="ionizationParameter"/>
-=======
    <entry label="density"/>
    <entry label="ionizationParameter"/>
    <entry label="metallicity"/>
    <entry label="spectralIndex"/>
  
->>>>>>> Stashed changes
   </enumeration>
   !!]
 contains
@@ -108,11 +97,7 @@ contains
     class           (outputTimesClass                               ), pointer                     :: outputTimes_
     class           (accretionDisksClass                            ), pointer                     :: accretionDisks_
     class(blackHoleAccretionRateClass                               ), pointer       :: blackHoleAccretionRate_
-<<<<<<< Updated upstream
-    double precision                                                                               :: alpha
-=======
     double precision                                                                               :: alpha, volume_filling_factor
->>>>>>> Stashed changes
     allocate(lineNames(parameters%count('lineNames')))
     !![
     <inputParameter>
@@ -139,11 +124,7 @@ contains
    <objectBuilder class="blackHoleAccretionRate" name="blackHoleAccretionRate_" source="parameters"/>
     <objectBuilder class="outputTimes"           name="outputTimes_"            source="parameters"/>
     !!]
-<<<<<<< Updated upstream
-    self=nodePropertyExtractorLmnstyEmssnLineAGN(accretionDisks_,blackHoleAccretionRate_,outputTimes_,lineNames,alpha)
-=======
     self=nodePropertyExtractorLmnstyEmssnLineAGN(accretionDisks_,blackHoleAccretionRate_,outputTimes_,lineNames,alpha,volume_filling_factor)
->>>>>>> Stashed changes
     !![
     <inputParametersValidate source="parameters"    />
     <objectDestructor name="accretionDisks_"        />
@@ -153,11 +134,7 @@ contains
     return
   end function lmnstyEmssnLineAGNConstructorParameters
 
-<<<<<<< Updated upstream
-  function lmnstyEmssnLineAGNConstructorInternal(accretionDisks_,blackHoleAccretionRate_,outputTimes_,lineNames,alpha,outputMask) result(self)
-=======
   function lmnstyEmssnLineAGNConstructorInternal(accretionDisks_,blackHoleAccretionRate_,outputTimes_,lineNames,alpha,volume_filling_factor,outputMask) result(self)
->>>>>>> Stashed changes
     !!{
     Internal constructor for the ``lmnstyEmssnLineAGN'' output analysis property extractor class.
     !!}
@@ -174,11 +151,7 @@ contains
      use           :: Table_Labels                  , only : extrapolationTypeFix
     implicit none
     type            (nodePropertyExtractorLmnstyEmssnLineAGN)                                                :: self
-<<<<<<< Updated upstream
-    double precision                                                 , intent(in   )                         :: alpha
-=======
     double precision                                                 , intent(in   )                         :: alpha, volume_filling_factor
->>>>>>> Stashed changes
     type            (varying_string                                 ), intent(in   ), dimension(:)           :: lineNames
     logical                                                          , intent(in   ), dimension(:), optional :: outputMask
     class           (accretionDisksClass                            ), intent(in   ), target                 :: accretionDisks_
@@ -188,11 +161,7 @@ contains
     type            (hdf5Object                                 )                                      :: emissionLinesFile, lines, lineDataset
     integer                                                                                            :: i,k, countBlackHoles
     !![
-<<<<<<< Updated upstream
-    <constructorAssign variables="lineNames, alpha, *accretionDisks_, *blackHoleAccretionRate_, *outputTimes_"/>
-=======
     <constructorAssign variables="lineNames, alpha, volume_filling_factor, *accretionDisks_, *blackHoleAccretionRate_, *outputTimes_"/>
->>>>>>> Stashed changes
     !!]
     ! Read the table of emission line luminosities.
     !$ call hdf5Access%set()
@@ -201,18 +170,11 @@ contains
     do i=1,size(lineNames)
        if (.not.lines%hasDataset(char(self%lineNames(i)))) call Error_Report('line "'//char(self%lineNames(i))//'" not found'//{introspection:location})
     end do
-<<<<<<< Updated upstream
-    call emissionLinesFile%readDataset('spectralIndex'                ,self%spectralIndex        )
-    call emissionLinesFile%readDataset('metallicity'                  ,self%metallicity                 )
-    call emissionLinesFile%readDataset('ionizationParameter'          ,self%ionizationParameter)
-    call emissionLinesFile%readDataset('densityHydrogen'              ,self%densityHydrogen             )
-=======
 
     call emissionLinesFile%readDataset('densityHydrogen'              ,self%densityHydrogen             )
     call emissionLinesFile%readDataset('ionizationParameter'          ,self%ionizationParameter         )
     call emissionLinesFile%readDataset('metallicity'                  ,self%metallicity                 )
     call emissionLinesFile%readDataset('spectralIndex'                ,self%spectralIndex               )
->>>>>>> Stashed changes
     
     allocate(                                          &
          &   self%luminosity                           &
@@ -239,23 +201,10 @@ contains
     call lines            %close      (                                                                 )
     call emissionLinesFile%close      (                                                                 )
     !$ call hdf5Access%unset()
-    !write(0,*) "metallicities",self%metallicity
+
     ! Convert parameters and luminosities to log form.
     self%densityHydrogen             =log10(self%densityHydrogen             )
     self%ionizationParameter         =log10(self%ionizationParameter         )
-<<<<<<< Updated upstream
-    self%metallicity                 =log10(self%metallicity                 )
-    self%luminosity                  =log10(self%luminosity                  )
-    ! Initialize interpolators.
-    allocate(self%interpolator_(4))
-    
-    self%interpolator_(interpolantsSpectralIndex      %ID)=interpolator(self%spectralIndex,extrapolationType=extrapolationTypeFix)
-    self%interpolator_(interpolantsMetallicity        %ID)=interpolator(self%metallicity,extrapolationType=extrapolationTypeFix)
-    self%interpolator_(interpolantsIonizationParameter%ID)=interpolator(self%ionizationParameter,extrapolationType=extrapolationTypeFix)
-    self%interpolator_(interpolantsDensity            %ID)=interpolator(self%densityHydrogen,extrapolationType=extrapolationTypeFix)
-    
-    
-=======
 
     ! Cloudy table gives metallicity Z (not in log)
     self%metallicity                 =log10(self%metallicity                 )
@@ -270,7 +219,6 @@ contains
     self%interpolator_(interpolantsMetallicity        %ID)=interpolator(self%metallicity,extrapolationType=extrapolationTypeFix)
     self%interpolator_(interpolantsSpectralIndex      %ID)=interpolator(self%spectralIndex,extrapolationType=extrapolationTypeFix)
 
->>>>>>> Stashed changes
     
     !$ call OMP_Init_Lock(self%interpolateLock)
     ! Construct name and description.
@@ -336,15 +284,9 @@ contains
     integer         (c_size_t                                       ), dimension(0:1,4)        :: interpolateIndex
     double precision                                                 , dimension(0:1,4)        :: interpolateFactor
     double precision                                                                           :: weight                                                  , luminosityLineAGN
-<<<<<<< Updated upstream
-    double precision                                                                           :: integral, recombinationCoefficient, rateMassAccretionSpheroid, rateMassAccretionDisk, wavelength_,nu_1240,nu_13,nu_495,nu_12,L_agn,&
-                    &                                                                             hydrogenDensity,spectralIndex ,normalizationConstant,radiativeEfficiency_disk,radiativeEfficiency_sph,blackHoleAccretionRate_disk,blackHoleAccretionRate_sph,rateIonizingPhotonsNormalized, rateIonizingPhotons, ionizationParam,&
-                    &                                                                             massGas, radius, rateStarFormation, metallicityGas, stromgren_radius, denom , halfMassRadius                  
-=======
     double precision                                                                           :: integral, recombinationCoefficient, rateMassAccretionSpheroid, rateMassAccretionHotHalo, wavelength_,nu_001,nu_091,nu_25,nu_10,L_agn,&
                     &                                                                             hydrogenDensity,spectralIndex ,normalizationConstant,radiativeEfficiency,blackHoleAccretionRate,rateIonizingPhotonsNormalized, rateIonizingPhotons, ionizationParam,&
                     &                                                                             massGas, radius, rateStarFormation, metallicityGas, stromgren_radius, denom , halfMassRadius, hydrogen_mass                  
->>>>>>> Stashed changes
     !$GLC attributes unused :: instance
     integer         (c_size_t                                       )                          :: output
     integer                                                                                    :: component                                               , continuum                    , &
@@ -364,14 +306,10 @@ contains
     massGas            =disk    %massGas                         (    ) + spheroid%massGas                         (    )
     radius             =disk    %radius                          (    ) + spheroid%radius                          (    )
     massDistribution_            => node             %massDistribution   (massType      =massTypeStellar)
-<<<<<<< Updated upstream
-    halfMassRadius                              =  3.086d+22*massDistribution_%radiusEnclosingMass(massFractional=0.5d0          )
-=======
     halfMassRadius                              =  mega*parsec*massDistribution_%radiusEnclosingMass(massFractional=0.5d0          )
     radius=mega*parsec*radius
     hydrogen_mass = massGas*massSolar
     hydrogenDensity=1000.d0
->>>>>>> Stashed changes
     !![
     <objectDestructor name="massDistribution_"/>
     !!]
@@ -383,10 +321,7 @@ contains
     
     
     call abundancesGas%massToMassFraction(massGas)
-<<<<<<< Updated upstream
-=======
     ! Galacticus galaxies gives the metallicity in log10
->>>>>>> Stashed changes
     metallicityGas=abundancesGas%metallicity(metallicityTypeLogarithmicByMassSolar)
     if (isnan(metallicityGas)) then
         metallicityGas=0.0d0
@@ -394,63 +329,6 @@ contains
 
     blackHole                => node     %blackHole()
     !limit frequencies in SI units (per seconds)
-<<<<<<< Updated upstream
-    nu_1240=speedLight/(0.001d0*micro)
-    nu_13=speedLight/(0.0912d0*micro)
-    nu_495=speedLight/(0.25d0*micro)
-    nu_12=speedLight/(10.0d0*micro)
-
-    ! Calculate integral for AGN luminosity from 0 to infinity
-    integral=((nu_12**3.0d0)/3.0d0)                                   &
-             &    + (2*(SQRT(nu_495)   -  SQRT(nu_12)) )              &
-             &    + ((1.0d0/(self%alpha+1.0d0))* ( (nu_1240**(self%alpha+1.0d0)) - (nu_495**(self%alpha+1.0d0)) ) ) 
-
-    recombinationCoefficient=micro*2.6d-13
-
-    write(0,*) "(nu_12**3.0d0)/3.0d0)",(nu_12**3.0d0)/3.0d0
-    write(0,*) "integral",integral
-
-    !calculate black hole accretion rate
-    call  self%blackHoleAccretionRate_%rateAccretion(blackHole,rateMassAccretionSpheroid,rateMassAccretionDisk)
-
-    !Black hole accretion rate in kg/s
-    blackHoleAccretionRate_disk =(massSolar/gigaYear)*rateMassAccretionDisk
-
-    blackHoleAccretionRate_sph =(massSolar/gigaYear)*rateMassAccretionSpheroid
-
-    !Radiative effciency of black hole
-    radiativeEfficiency_disk=self%accretionDisks_%efficiencyRadiative(blackHole,rateMassAccretionDisk)
-    radiativeEfficiency_sph=self%accretionDisks_%efficiencyRadiative(blackHole,rateMassAccretionSpheroid)
-
-    !Luminosity in J/s
-    L_agn=(blackHoleAccretionRate_disk*speedLight*speedLight*radiativeEfficiency_disk) &
-          & + (blackHoleAccretionRate_sph*speedLight*speedLight*radiativeEfficiency_sph)
-    
-    normalizationConstant=L_agn/integral
-
-    write(0,*) "black hole accretion rate disk, sph kg/s ",blackHoleAccretionRate_disk, blackHoleAccretionRate_sph
-    write(0,*) "nu 12 13.6 1240,  ",nu_12, "  ",nu_13,"  ",nu_1240
-    write(0,*) "norm const",normalizationConstant
-
-    
-    rateIonizingPhotons=((nu_1240**self%alpha) - (nu_13**self%alpha)) &
-            &                     /(plancksConstant*self%alpha)
-
-    write(0,*) "L_AGN ",L_agn
-    write(0,*) "Q ",rateIonizingPhotons
-
-
-    if(L_agn>0.0d0) then
-      rateIonizingPhotonsNormalized=rateIonizingPhotons*normalizationConstant
-      
-      write(0,*) "Q norm ",rateIonizingPhotonsNormalized
-      halfMassRadius=1.0d19
-      write(0,*) " halfMassRadius  ", halfMassRadius
-      
-      !using half mass radius for now, should use Stromgren radius
-      ionizationParam = rateIonizingPhotonsNormalized/(4*Pi*halfMassRadius*halfMassRadius*0.001d0*speedLight)
-      write(0,*) "ionization param ",ionizationParam
-=======
     nu_001=speedLight/(0.001d0*micro)
     nu_091=speedLight/(0.0912d0*micro)
     nu_25=speedLight/(0.25d0*micro)
@@ -488,8 +366,6 @@ contains
     
     rateIonizingPhotons=L_agn*((nu_001**self%alpha) - (nu_091**self%alpha)) &
             &                     /(plancksConstant*self%alpha)
-    
-    write(0,*) "L_AGN ",L_agn
 
     rateIonizingPhotonsNormalized=rateIonizingPhotons*normalizationConstant
     
@@ -500,14 +376,8 @@ contains
 
  
     if(L_agn>0.0d0) then
-      
-      
-      write(0,*) "Q norm ",rateIonizingPhotonsNormalized
-      write(0,*) " halfMassRadius  ", halfMassRadius
-      
       !using half mass radius for now, should use Stromgren radius
       ionizationParam = rateIonizingPhotonsNormalized/(4*Pi*stromgren_radius*stromgren_radius*hydrogenDensity*mega*speedLight)
->>>>>>> Stashed changes
       ionizationParam=log10(ionizationParam)
     else
       rateIonizingPhotonsNormalized=0.0d0
@@ -516,7 +386,6 @@ contains
 <<<<<<< Updated upstream
 
 =======
-    write(0,*) "metallicityGas before ",metallicityGas
 >>>>>>> Stashed changes
 
     if (isPhysical) then
@@ -527,20 +396,6 @@ contains
     end if                                                        
     ! Truncate properties to table bounds where necessary to avoid unphysical extrapolations.
     !
-<<<<<<< Updated upstream
-    !! Hydrogen density and H-ionizing flux are truncated at both the lower and upper extent
-    !! of the tabulated range. The assumption is that the table covers the plausible
-    !! physical range for these values. In the case of H-ionizing flux, if we truncate the
-    !! value we must then apply a multiplicative correction to the line luminosity to ensure
-    !! that we correctly account for all ionizing photons produced.
-    !!
-    !! For metallicity and the He/H and O/He ionizing flux ratios we truncate only at the
-    !! upper extent of the tabulated range. The table is assumed to be tabulated up to the
-    !! maximum physically plausible extent for these quantities. Extrapolation to lower
-    !! values should be reasonably robust (and the table is assumed to extend to
-    !! sufficiently low values that the consequences of extrapolation are unlikely to be
-    !! observationally relevant anyway).
-=======
     !! Hydrogen density and metallicity are truncated at both the lower and upper extent
     !! of the tabulated range. The assumption is that the table covers the plausible
     !! physical range for these values. 
@@ -548,7 +403,6 @@ contains
     !! The table is assumed to be tabulated up to the maximum physically plausible
     !! extent for these quantities. 
 
->>>>>>> Stashed changes
     !where     (densityHydrogen             < self%densityHydrogen       (1)
     !elsewhere (densityHydrogen                < self%densityHydrogen              (size(self%densityHydrogen             )))
     !   densityHydrogen                =self%densityHydrogen             (size(self%densityHydrogen             ))
@@ -567,20 +421,6 @@ contains
     
     ! Iterate over components.
     lmnstyEmssnLineAGNExtract=0.0d0
-<<<<<<< Updated upstream
-    write(0,*) " ionizationParam ", ionizationParam
-    ! Find interpolating factors in all five interpolants, preventing extrapolation beyond the tabulated ranges.
-    !$ call OMP_Set_Lock  (self%interpolateLock)
-    call self%interpolator_(interpolantsSpectralIndex%ID)%linearFactors(-1.7d0,interpolateIndex(0,interpolantsSpectralIndex%ID),interpolateFactor(:,interpolantsSpectralIndex   %ID))
-    call self%interpolator_(interpolantsMetallicity%ID)%linearFactors(metallicityGas ,interpolateIndex(0,interpolantsMetallicity%ID),interpolateFactor(:,interpolantsMetallicity%ID))
-    call self%interpolator_(interpolantsIonizationParameter%ID)%linearFactors(ionizationParam ,interpolateIndex(0,interpolantsIonizationParameter%ID),interpolateFactor(:,interpolantsIonizationParameter     %ID))
-    call self%interpolator_(interpolantsDensity    %ID)%linearFactors(hydrogenDensity  ,interpolateIndex(0,interpolantsDensity    %ID),interpolateFactor(:,interpolantsDensity    %ID))
-    
-=======
-    !write(0,*) "interpolantMetallicity%ID ",interpolantMetallicity%ID
-    write(0,*) "metallicityGas ",metallicityGas
-    write(0,*) "self%metallicity ",self%metallicity
-    write(0,*) "ionizationParam ",ionizationParam
     ! Find interpolating factors in all four interpolants, preventing extrapolation beyond the tabulated ranges.
     !$ call OMP_Set_Lock  (self%interpolateLock)
     call self%interpolator_(interpolantsDensity    %ID)%linearFactors(hydrogenDensity  ,interpolateIndex(0,interpolantsDensity    %ID),interpolateFactor(:,interpolantsDensity    %ID))
@@ -588,17 +428,11 @@ contains
     call self%interpolator_(interpolantsMetallicity%ID)%linearFactors(metallicityGas ,interpolateIndex(0,interpolantsMetallicity%ID),interpolateFactor(:,interpolantsMetallicity%ID))
     call self%interpolator_(interpolantsSpectralIndex%ID)%linearFactors(self%alpha,interpolateIndex(0,interpolantsSpectralIndex%ID),interpolateFactor(:,interpolantsSpectralIndex   %ID))
   
->>>>>>> Stashed changes
     !$ call OMP_Unset_Lock(self%interpolateLock)
     interpolateIndex (1,:                     )=interpolateIndex(0,:)+1
     interpolateFactor=max(min(interpolateFactor,1.0d0),0.0d0)
     ! Iterate over lines.
     do line=1,size(self%luminosity,dim=5)
-<<<<<<< Updated upstream
-        !$ call OMP_Unset_Lock(self%interpolateLock)
-        !$ call OMP_Unset_Lock(self%interpolateLock)
-=======
->>>>>>> Stashed changes
         ! Interpolate in all four interpolants.
         luminosityLineAGN=0.0d0
         do i=0,1
@@ -609,20 +443,6 @@ contains
                           &                     *                interpolateFactor(j,2)  &
                           &                     *                interpolateFactor(k,3)  &
                           &                     *                interpolateFactor(l,4)  
-<<<<<<< Updated upstream
-                    luminosityLineAGN=+luminosityLineAGN                                      &
-                          &                     +weight                                  &
-                          &                     *self%luminosity(                        &
-                          &                                      interpolateIndex (i,1), &
-                          &                                      interpolateIndex (j,2), &
-                          &                                      interpolateIndex (k,3), &
-                          &                                      interpolateIndex (l,4), &
-                          &                                      line                    &
-                          &                                     )
-                          !write(0,*) "weight ",weight
-                          !write(0,*) "interpolate factors ", interpolateFactor(i,1),interpolateFactor(j,2),interpolateFactor(k,3),interpolateFactor(l,4)
-                          !write(0,*) "luminosity ",self%luminosity( interpolateIndex (l,4),interpolateIndex (k,3),interpolateIndex (j,2),interpolateIndex (i,1),line)
-=======
                     luminosityLineAGN=+luminosityLineAGN                                 &
                           &                     +weight                                  &
                           &                     *stromgren_radius*stromgren_radius*1.0d4 &
@@ -633,28 +453,13 @@ contains
                           &                                      interpolateIndex (i,1), &
                           &                                      line                    &
                           &                                     )
-                          !write(0,*) "weight ",weight
-                          !write(0,*) "interpolate index ", interpolateIndex (l,4),interpolateIndex (k,3),interpolateIndex (j,2),interpolateIndex (i,1)
-                          write(0,*) "luminosity ",self%luminosity( interpolateIndex (l,4),interpolateIndex (k,3),interpolateIndex (j,2),interpolateIndex (i,1),line)
->>>>>>> Stashed changes
                 end do
               end do
           end do
         end do
         lmnstyEmssnLineAGNExtract=+lmnstyEmssnLineAGNExtract                           &
-<<<<<<< Updated upstream
-        &                        +10.0d0**luminosityLineAGN      
-        !write(0,*) "lmnstyEmssnLineAGNExtract ",lmnstyEmssnLineAGNExtract                                                               
+        &                        + luminosityLineAGN                                                               
     end do
-
-   write(0,*) "lmnstyEmssnLineAGNExtract ",lmnstyEmssnLineAGNExtract
-=======
-        &                        + luminosityLineAGN      
-        !write(0,*) "lmnstyEmssnLineAGNExtract ",lmnstyEmssnLineAGNExtract                                                               
-    end do
-
-   !write(0,*) "luminosityLineAGN ",luminosityLineAGN
->>>>>>> Stashed changes
    return
   end function lmnstyEmssnLineAGNExtract
 
