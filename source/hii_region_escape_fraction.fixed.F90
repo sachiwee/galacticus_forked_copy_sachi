@@ -60,14 +60,14 @@ contains
     !![
     <inputParameter>
       <name>escapeFraction</name>
-      <defaultValue>0.006d0</defaultValue>
+      <defaultValue>0.1d0</defaultValue>
       <description> Escape fraction of ionizing photons from galaxies into IGM. </description>
       <source>parameters</source>
     </inputParameter>
     <inputParameter>
       <name>ageLimit</name>
       <defaultValue>0.01d0</defaultValue>
-      <description> Escape fraction of ionizing photons from galaxies into IGM. </description>
+      <description> Maximum age of stellar population </description>
       <source>parameters</source>
     </inputParameter>
     !!]

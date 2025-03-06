@@ -38,6 +38,7 @@ module hii_Region_Escape_Fraction
     <description>Returns the escape fraction of hydrogen. </description>
     <type>double precision</type>
     <pass>yes</pass>
+    !age of stellar population
     <argument>double precision, intent(in   ) :: age_pop </argument>
    </method>
   </functionClass>

@@ -124,7 +124,7 @@ contains
     !![
     <inputParameter>
       <name>cloudyTableFileName</name>
-      <defaultValue>var_str('%DATASTATICPATH%/hiiRegions/emissionLineLuminosities_BC2003_highResolution_imfChabrier_nH.hdf5')</defaultValue>
+      <defaultValue>var_str('%DATASTATICPATH%/hiiRegions/cloudyTable.hdf5')</defaultValue>
       <source>parameters</source>
       <description>The file of emission line luminosities to use.</description>
     </inputParameter>
@@ -275,7 +275,10 @@ contains
     self%luminositiesReduced           =+self%luminositiesReduced                                                                                                                 &
          &                              /self%hiiRegionLuminosityFunction_ %cumulativeDistributionFunction(rateHydrogenIonizingPhotonsMinimum,rateHydrogenIonizingPhotonsMaximum) &
          &                              /self%hiiRegionDensityDistribution_%cumulativeDensityDistribution (            densityHydrogenMinimum,            densityHydrogenMaximum)
-    self%ionizingLuminosityHydrogenMean=+self%hiiRegionLuminosityFunction_ %cumulativeLuminosity          (rateHydrogenIonizingPhotonsMinimum,rateHydrogenIonizingPhotonsMaximum)
+    self%ionizingLuminosityHydrogenMean=+self%hiiRegionLuminosityFunction_ %cumulativeLuminosity          (rateHydrogenIonizingPhotonsMinimum,rateHydrogenIonizingPhotonsMaximum) 
+    do age_i=1,size(self%ages)
+       write(0,*) "age, metallicity,  L/avgQ  ",self%ages(age_i), self%metallicities(1), self%luminositiesReduced(age_i,1,2)/self%ionizingLuminosityHydrogenMean
+    end do
     ! Construct property names and descriptions.
     allocate(self%names_       (size(lineNames)))
     allocate(self%descriptions_(size(lineNames)))
