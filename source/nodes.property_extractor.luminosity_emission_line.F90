@@ -88,6 +88,7 @@
      procedure :: historyHashedDescriptor => emissionLineLuminosityHistoryHashedDescriptor
      procedure :: elementCount            => emissionLineLuminosityElementCount
      procedure :: extract                 => emissionLineLuminosityExtract
+     procedure :: quantity                => emissionLineLuminosityQuantity
      procedure :: names                   => emissionLineLuminosityNames
      procedure :: descriptions            => emissionLineLuminosityDescriptions
      procedure :: unitsInSI               => emissionLineLuminosityUnitsInSI
@@ -422,6 +423,20 @@ contains
     end do
     return
   end function emissionLineLuminosityExtract
+
+  function emissionLineLuminosityQuantity(self)
+    !!{
+    Return the class of the emission line luminosity property.
+    !!}                                                                                                                                                      >
+    use :: Output_Analyses_Options, only : outputAnalysisPropertyQuantityLuminosity
+    implicit none
+    type (enumerationOutputAnalysisPropertyQuantityType  )                :: emissionLineLuminosityQuantity
+    class(nodePropertyExtractorLuminosityEmissionLine), intent(inout) :: self
+    !$GLC attributes unused :: self                                                                                                                          >
+
+    emissionLineLuminosityQuantity=outputAnalysisPropertyQuantityLuminosity
+    return
+  end function emissionLineLuminosityQuantity
 
   subroutine emissionLineLuminosityNames(self,time,names)
     !!{

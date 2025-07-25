@@ -57,16 +57,20 @@ contains
     !!}
     use :: Gravitational_Lensing         , only : gravitationalLensing           , gravitationalLensingClass
     use :: Input_Parameters              , only : inputParameter                 , inputParameters
-    use :: Star_Formation_Rates_Disks    , only : starFormationRateDisksClass
-    use :: Star_Formation_Rates_Spheroids, only : starFormationRateSpheroidsClass
+    use :: Star_Formation_Histories    , only : starFormationHistoryClass
+    use :: HII_Region_Luminosity_Functions  , only : hiiRegionLuminosityFunctionClass
+    use :: HII_Region_Density_Distributions        , only : hiiRegionDensityDistributionClass  
+    use :: HII_Region_Escape_Fraction              , only : hiiRegionEscapeFractionClass
     implicit none
     type            (outputAnalysisLuminosityFunctionSobral2013HiZELS)                              :: self
     type            (inputParameters                                 ), intent(inout)               :: parameters
     class           (cosmologyFunctionsClass                         ), pointer                     :: cosmologyFunctions_
     class           (outputTimesClass                                ), pointer                     :: outputTimes_
     class           (gravitationalLensingClass                       ), pointer                     :: gravitationalLensing_
-    class           (starFormationRateDisksClass                     ), pointer                     :: starFormationRateDisks_
-    class           (starFormationRateSpheroidsClass                 ), pointer                     :: starFormationRateSpheroids_
+    class           (starFormationHistoryClass                           ), pointer                     :: starFormationHistory_
+    class           (hiiRegionLuminosityFunctionClass                ), pointer                     :: hiiRegionLuminosityFunction_
+    class           (hiiRegionDensityDistributionClass      ), pointer                     :: hiiRegionDensityDistribution_       
+    class           (hiiRegionEscapeFractionClass           ), pointer                     :: hiiRegionEscapeFraction_ 
     class           (stellarSpectraDustAttenuationClass              ), pointer                     :: stellarSpectraDustAttenuation_
     double precision                                                  , allocatable  , dimension(:) :: randomErrorPolynomialCoefficient , systematicErrorPolynomialCoefficient
     integer                                                                                         :: covarianceBinomialBinsPerDecade  , redshiftInterval
@@ -157,25 +161,29 @@ contains
     <objectBuilder class="cosmologyFunctions"            name="cosmologyFunctions_"            source="parameters"/>
     <objectBuilder class="outputTimes"                   name="outputTimes_"                   source="parameters"/>
     <objectBuilder class="gravitationalLensing"          name="gravitationalLensing_"          source="parameters"/>
-    <objectBuilder class="starFormationRateDisks"        name="starFormationRateDisks_"        source="parameters"/>
-    <objectBuilder class="starFormationRateSpheroids"    name="starFormationRateSpheroids_"    source="parameters"/>
+    <objectBuilder class="starFormationHistory"        name="starFormationHistory_"        source="parameters"/>
+    <objectBuilder class="hiiRegionLuminosityFunction"   name="hiiRegionLuminosityFunction_"   source="parameters"/>
+    <objectBuilder class="hiiRegionDensityDistribution" name="hiiRegionDensityDistribution_" source="parameters"/>
+    <objectBuilder class="hiiRegionEscapeFraction"      name="hiiRegionEscapeFraction_"      source="parameters"/>
     <objectBuilder class="stellarSpectraDustAttenuation" name="stellarSpectraDustAttenuation_" source="parameters"/>
     !!]
     ! Build the object.
-    self=outputAnalysisLuminosityFunctionSobral2013HiZELS(cosmologyFunctions_,gravitationalLensing_,stellarSpectraDustAttenuation_,outputTimes_,starFormationRateDisks_,starFormationRateSpheroids_,redshiftInterval,randomErrorMinimum,randomErrorMaximum,randomErrorPolynomialCoefficient,systematicErrorPolynomialCoefficient,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,sizeSourceLensing,depthOpticalISMCoefficient)
+    self=outputAnalysisLuminosityFunctionSobral2013HiZELS(cosmologyFunctions_,gravitationalLensing_,stellarSpectraDustAttenuation_,starFormationHistory_,outputTimes_,hiiRegionLuminosityFunction_,hiiRegionDensityDistribution_,hiiRegionEscapeFraction_,redshiftInterval,randomErrorMinimum,randomErrorMaximum,randomErrorPolynomialCoefficient,systematicErrorPolynomialCoefficient,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,sizeSourceLensing,depthOpticalISMCoefficient)
     !![
     <inputParametersValidate source="parameters"/>
     <objectDestructor name="cosmologyFunctions_"           />
     <objectDestructor name="outputTimes_"                  />
     <objectDestructor name="gravitationalLensing_"         />
-    <objectDestructor name="starFormationRateDisks_"       />
-    <objectDestructor name="starFormationRateSpheroids_"   />
+    <objectDestructor name="starFormationHistory_"         />
+    <objectDestructor name="hiiRegionLuminosityFunction_"  />
+    <objectDestructor name="hiiRegionDensityDistribution_"/>
+    <objectDestructor name="hiiRegionEscapeFraction_"     />
     <objectDestructor name="stellarSpectraDustAttenuation_"/>
     !!]
     return
   end function luminosityFunctionSobral2013HiZELSConstructorParameters
 
-  function luminosityFunctionSobral2013HiZELSConstructorInternal(cosmologyFunctions_,gravitationalLensing_,stellarSpectraDustAttenuation_,outputTimes_,starFormationRateDisks_,starFormationRateSpheroids_,redshiftInterval,randomErrorMinimum,randomErrorMaximum,randomErrorPolynomialCoefficient,systematicErrorPolynomialCoefficient,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,sizeSourceLensing,depthOpticalISMCoefficient) result (self)
+  function luminosityFunctionSobral2013HiZELSConstructorInternal(cosmologyFunctions_,gravitationalLensing_,stellarSpectraDustAttenuation_,starFormationHistory_,outputTimes_,hiiRegionLuminosityFunction_,hiiRegionDensityDistribution_,hiiRegionEscapeFraction_,redshiftInterval,randomErrorMinimum,randomErrorMaximum,randomErrorPolynomialCoefficient,systematicErrorPolynomialCoefficient,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,sizeSourceLensing,depthOpticalISMCoefficient) result (self)
     !!{
     Constructor for the \refClass{outputAnalysisLuminosityFunctionSobral2013HiZELS} output analysis class for internal use.
     !!}
@@ -188,8 +196,10 @@ contains
     use :: Gravitational_Lensing                 , only : gravitationalLensingClass
     use :: Output_Analysis_Distribution_Operators, only : distributionOperatorList                       , outputAnalysisDistributionOperatorGrvtnlLnsng, outputAnalysisDistributionOperatorRandomErrorPlynml, outputAnalysisDistributionOperatorSequence
     use :: Output_Analysis_Property_Operators    , only : outputAnalysisPropertyOperatorSystmtcPolynomial
-    use :: Star_Formation_Rates_Disks            , only : starFormationRateDisksClass
-    use :: Star_Formation_Rates_Spheroids        , only : starFormationRateSpheroidsClass
+    use :: Star_Formation_Histories              , only : starFormationHistoryClass
+    use :: HII_Region_Luminosity_Functions       , only : hiiRegionLuminosityFunctionClass
+    use :: HII_Region_Density_Distributions, only : hiiRegionDensityDistributionClass  
+    use :: HII_Region_Escape_Fraction      , only : hiiRegionEscapeFractionClass
     use :: String_Handling                       , only : operator(//)
     implicit none
     type            (outputAnalysisLuminosityFunctionSobral2013HiZELS   )                              :: self
@@ -197,8 +207,10 @@ contains
     class           (outputTimesClass                                   ), intent(inout), target       :: outputTimes_
     class           (gravitationalLensingClass                          ), intent(in   ), target       :: gravitationalLensing_
     class           (stellarSpectraDustAttenuationClass                 ), intent(in   ), target       :: stellarSpectraDustAttenuation_
-    class           (starFormationRateDisksClass                        ), intent(in   ), target       :: starFormationRateDisks_
-    class           (starFormationRateSpheroidsClass                    ), intent(in   ), target       :: starFormationRateSpheroids_
+    class           (starFormationHistoryClass                        ), intent(in   ), target       :: starFormationHistory_
+    class           (hiiRegionLuminosityFunctionClass                   ),intent(in   ), target       :: hiiRegionLuminosityFunction_
+    class           (hiiRegionDensityDistributionClass              ), intent(in   ), target               :: hiiRegionDensityDistribution_
+    class           (hiiRegionEscapeFractionClass                   ), intent(in   ), target               :: hiiRegionEscapeFraction_
     integer                                                              , intent(in   )               :: redshiftInterval
     double precision                                                     , intent(in   )               :: randomErrorMinimum                                  , randomErrorMaximum                  , &
          &                                                                                                sizeSourceLensing                                   , depthOpticalISMCoefficient
@@ -217,7 +229,7 @@ contains
     double precision                                                                    , parameter    :: errorPolynomialZeroPoint                            =40.0d0
     type            (varying_string                                     )                              :: fileName
     !![
-    <constructorAssign variables="randomErrorPolynomialCoefficient, systematicErrorPolynomialCoefficient, redshiftInterval, randomErrorMinimum, randomErrorMaximum, sizeSourceLensing, *gravitationalLensing_"/>
+    <constructorAssign variables="*cosmologyFunctions_,*gravitationalLensing_,*stellarSpectraDustAttenuation_,*starFormationHistory_,*outputTimes_,*hiiRegionLuminosityFunction_,*hiiRegionDensityDistribution_,*hiiRegionEscapeFraction_,redshiftInterval,randomErrorMinimum,randomErrorMaximum,randomErrorPolynomialCoefficient,systematicErrorPolynomialCoefficient,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,sizeSourceLensing,depthOpticalISMCoefficient"/>
     !!]
     
     ! Build a filter which select galaxies with stellar mass 10³M☉ or greater.
@@ -337,9 +349,11 @@ contains
          &                                        cosmologyFunctionsData                                                                                                      , &
          &                                        outputAnalysisPropertyOperator_                                                                                             , &
          &                                        outputAnalysisDistributionOperator_                                                                                         , &
+         &                                        starFormationHistory_                                                                                                     , &
          &                                        outputTimes_                                                                                                                , &
-         &                                        starFormationRateDisks_                                                                                                     , &
-         &                                        starFormationRateSpheroids_                                                                                                 , &
+         &                                        hiiRegionLuminosityFunction_                                                                                                 , &
+         &                                        hiiRegionDensityDistribution_                                                                                           , &
+         &                                        hiiRegionEscapeFraction_                                                                                                , &
          &                                        covarianceBinomialBinsPerDecade                                                                                             , &
          &                                        covarianceBinomialMassHaloMinimum                                                                                           , &
          &                                        covarianceBinomialMassHaloMaximum                                                                                             &

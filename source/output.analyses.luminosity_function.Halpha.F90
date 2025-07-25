@@ -38,8 +38,10 @@ Implements a luminosity function output analysis class.
      class           (surveyGeometryClass               ), pointer                   :: surveyGeometry_                => null()
      class           (cosmologyFunctionsClass           ), pointer                   :: cosmologyFunctions_            => null(), cosmologyFunctionsData => null()
      class           (stellarSpectraDustAttenuationClass), pointer                   :: stellarSpectraDustAttenuation_ => null()
-     class           (starFormationRateDisksClass       ), pointer                   :: starFormationRateDisks_        => null()
-     class           (starFormationRateSpheroidsClass   ), pointer                   :: starFormationRateSpheroids_    => null()
+     class           (starFormationHistoryClass         ), pointer                   :: starFormationHistory_          => null()
+     class           (hiiRegionLuminosityFunctionClass  ), pointer                   :: hiiRegionLuminosityFunction_   => null() 
+     class           (hiiRegionDensityDistributionClass), pointer                    :: hiiRegionDensityDistribution_  => null()
+     class           (hiiRegionEscapeFractionClass     ), pointer                    :: hiiRegionEscapeFraction_       => null()
      double precision                                    , allocatable, dimension(:) :: luminosities
      double precision                                                                :: depthOpticalISMCoefficient
      logical                                                                         :: includeNitrogenII
@@ -62,10 +64,12 @@ contains
     !!{
     Constructor for the \refClass{outputAnalysisLuminosityFunctionHalpha} output analysis class which takes a parameter set as input.
     !!}
-    use :: Error                         , only : Error_Report
-    use :: Input_Parameters              , only : inputParameter                 , inputParameters
-    use :: Star_Formation_Rates_Disks    , only : starFormationRateDisksClass
-    use :: Star_Formation_Rates_Spheroids, only : starFormationRateSpheroidsClass
+    use :: Error                            , only : Error_Report
+    use :: Input_Parameters                 , only : inputParameter                 , inputParameters
+    use :: Star_Formation_Histories         , only : starFormationHistoryClass
+    use :: HII_Region_Luminosity_Functions  , only : hiiRegionLuminosityFunctionClass
+    use :: HII_Region_Density_Distributions        , only : hiiRegionDensityDistributionClass  
+    use :: HII_Region_Escape_Fraction              , only : hiiRegionEscapeFractionClass
     implicit none
     type            (outputAnalysisLuminosityFunctionHalpha )                              :: self
     type            (inputParameters                        ), intent(inout)               :: parameters
@@ -75,8 +79,10 @@ contains
     class           (outputTimesClass                       ), pointer                     :: outputTimes_
     class           (outputAnalysisDistributionOperatorClass), pointer                     :: outputAnalysisDistributionOperator_
     class           (outputAnalysisPropertyOperatorClass    ), pointer                     :: outputAnalysisPropertyOperator_
-    class           (starFormationRateDisksClass            ), pointer                     :: starFormationRateDisks_
-    class           (starFormationRateSpheroidsClass        ), pointer                     :: starFormationRateSpheroids_
+    class           (starFormationHistoryClass              ), pointer                     :: starFormationHistory_
+    class           (hiiRegionLuminosityFunctionClass       ), pointer                     :: hiiRegionLuminosityFunction_
+    class           (hiiRegionDensityDistributionClass      ), pointer                     :: hiiRegionDensityDistribution_       
+    class           (hiiRegionEscapeFractionClass           ), pointer                     :: hiiRegionEscapeFraction_             
     class           (stellarSpectraDustAttenuationClass     ), pointer                     :: stellarSpectraDustAttenuation_
     double precision                                         , dimension(:  ), allocatable :: luminosities                       , functionValueTarget              , &
          &                                                                                    functionCovarianceTarget1D
@@ -183,11 +189,13 @@ contains
     <objectBuilder class="outputAnalysisPropertyOperator"     name="outputAnalysisPropertyOperator_"     source="parameters"            />
     <objectBuilder class="outputAnalysisDistributionOperator" name="outputAnalysisDistributionOperator_" source="parameters"            />
     <objectBuilder class="surveyGeometry"                     name="surveyGeometry_"                     source="parameters"            />
-    <objectBuilder class="starFormationRateDisks"             name="starFormationRateDisks_"             source="parameters"            />
-    <objectBuilder class="starFormationRateSpheroids"         name="starFormationRateSpheroids_"         source="parameters"            />
+    <objectBuilder class="starFormationHistory"          name="starFormationHistory_"          source="parameters"/>
+    <objectBuilder class="hiiRegionLuminosityFunction"   name="hiiRegionLuminosityFunction_"   source="parameters"/>
+    <objectBuilder class="hiiRegionDensityDistribution" name="hiiRegionDensityDistribution_" source="parameters"/>
+    <objectBuilder class="hiiRegionEscapeFraction"      name="hiiRegionEscapeFraction_"      source="parameters"/>
     <objectBuilder class="stellarSpectraDustAttenuation"      name="stellarSpectraDustAttenuation_"      source="parameters"            />
     <conditionalCall>
-     <call>self=outputAnalysisLuminosityFunctionHalpha(label,comment,luminosities,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,starFormationRateDisks_,starFormationRateSpheroids_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum{conditions})</call>
+     <call>self=outputAnalysisLuminosityFunctionHalpha(label,comment,luminosities,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,starFormationHistory_,outputTimes_,hiiRegionLuminosityFunction_,hiiRegionDensityDistribution_,hiiRegionEscapeFraction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum{conditions})</call>
      <argument name="targetLabel"              value="targetLabel"              parameterPresent="parameters"/>
      <argument name="functionValueTarget"      value="functionValueTarget"      parameterPresent="parameters"/>
      <argument name="functionCovarianceTarget" value="functionCovarianceTarget" parameterPresent="parameters"/>
@@ -200,21 +208,25 @@ contains
     <objectDestructor name="outputAnalysisPropertyOperator_"    />
     <objectDestructor name="outputAnalysisDistributionOperator_"/>
     <objectDestructor name="surveyGeometry_"                    />
-    <objectDestructor name="starFormationRateDisks_"            />
-    <objectDestructor name="starFormationRateSpheroids_"        />
+    <objectDestructor name="starFormationHistory_"              />
+    <objectDestructor name="hiiRegionLuminosityFunction_"       />
+    <objectDestructor name="hiiRegionDensityDistribution_"/>
+    <objectDestructor name="hiiRegionEscapeFraction_"     />
     <objectDestructor name="stellarSpectraDustAttenuation_"     />
     !!]
     return
   end function luminosityFunctionHalphaConstructorParameters
 
-  function luminosityFunctionHalphaConstructorFile(label,comment,fileName,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,starFormationRateDisks_,starFormationRateSpheroids_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum) result (self)
+  function luminosityFunctionHalphaConstructorFile(label,comment,fileName,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,starFormationHistory_,outputTimes_,hiiRegionLuminosityFunction_,hiiRegionDensityDistribution_,hiiRegionEscapeFraction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum) result (self)
     !!{
     Constructor for the \refClass{outputAnalysisLuminosityFunctionHalpha} output analysis class which reads bin information from a standard format file.
     !!}
     use :: HDF5_Access                   , only : hdf5Access
     use :: IO_HDF5                       , only : hdf5Object
-    use :: Star_Formation_Rates_Disks    , only : starFormationRateDisksClass
-    use :: Star_Formation_Rates_Spheroids, only : starFormationRateSpheroidsClass
+    use :: Star_Formation_Histories       , only : starFormationHistoryClass
+    use :: HII_Region_Luminosity_Functions, only : hiiRegionLuminosityFunctionClass
+    use :: HII_Region_Density_Distributions        , only : hiiRegionDensityDistributionClass  
+    use :: HII_Region_Escape_Fraction              , only : hiiRegionEscapeFractionClass
     implicit none
     type            (outputAnalysisLuminosityFunctionHalpha )                              :: self
     type            (varying_string                         ), intent(in   )               :: label                              , comment
@@ -227,8 +239,10 @@ contains
     class           (outputTimesClass                       ), intent(inout) , target      :: outputTimes_
     class           (outputAnalysisPropertyOperatorClass    ), intent(inout) , target      :: outputAnalysisPropertyOperator_
     class           (outputAnalysisDistributionOperatorClass), intent(in   ) , target      :: outputAnalysisDistributionOperator_
-    class           (starFormationRateDisksClass            ), intent(in   ) , target      :: starFormationRateDisks_
-    class           (starFormationRateSpheroidsClass        ), intent(in   ) , target      :: starFormationRateSpheroids_
+    class           (starFormationHistoryClass              ), intent(in   ), target       :: starFormationHistory_
+    class           (hiiRegionLuminosityFunctionClass       ), intent(in   ), target       :: hiiRegionLuminosityFunction_
+    class           (hiiRegionDensityDistributionClass      ), intent(in   ), target       :: hiiRegionDensityDistribution_
+    class           (hiiRegionEscapeFractionClass           ), intent(in   ), target       :: hiiRegionEscapeFraction_
     class           (stellarSpectraDustAttenuationClass     ), intent(in   ) , target      :: stellarSpectraDustAttenuation_
     double precision                                         , dimension(:  ), allocatable :: luminosities                       , functionValueTarget              , &
          &                                                                                    functionErrorTarget
@@ -261,7 +275,7 @@ contains
     ! Construct the object.
     !![
     <conditionalCall>
-     <call>self=outputAnalysisLuminosityFunctionHalpha(label,comment,luminosities,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,starFormationRateDisks_,starFormationRateSpheroids_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum{conditions})</call>
+     <call>self=outputAnalysisLuminosityFunctionHalpha(label,comment,luminosities,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,starFormationHistory_,outputTimes_,hiiRegionLuminosityFunction_,hiiRegionDensityDistribution_,hiiRegionEscapeFraction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum{conditions})</call>
      <argument name="targetLabel"              value="targetLabel"              condition="haveTarget"/>
      <argument name="functionValueTarget"      value="functionValueTarget"      condition="haveTarget"/>
      <argument name="functionCovarianceTarget" value="functionCovarianceTarget" condition="haveTarget"/>
@@ -270,7 +284,7 @@ contains
     return
   end function luminosityFunctionHalphaConstructorFile
 
-  function luminosityFunctionHalphaConstructorInternal(label,comment,luminosities,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,starFormationRateDisks_,starFormationRateSpheroids_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,targetLabel,functionValueTarget,functionCovarianceTarget) result(self)
+  function luminosityFunctionHalphaConstructorInternal(label,comment,luminosities,includeNitrogenII,depthOpticalISMCoefficient,galacticFilter_,surveyGeometry_,stellarSpectraDustAttenuation_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,starFormationHistory_,outputTimes_,hiiRegionLuminosityFunction_,hiiRegionDensityDistribution_,hiiRegionEscapeFraction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,targetLabel,functionValueTarget,functionCovarianceTarget) result(self)
     !!{
     Constructor for the \refClass{outputAnalysisLuminosityFunctionHalpha} output analysis class which takes a parameter set as input.
     !!}
@@ -279,7 +293,7 @@ contains
     use :: Error                                   , only : Error_Report
     use :: Geometry_Surveys                        , only : surveyGeometryClass
     use :: ISO_Varying_String                      , only : var_str                                        , varying_string
-    use :: Node_Property_Extractors                , only : nodePropertyExtractorLmnstyEmssnLinePanuzzo2003
+    use :: Node_Property_Extractors                , only : nodePropertyExtractorLuminosityEmissionLine, nodePropertyExtractorScalarizerLuminosity
     use :: Numerical_Constants_Astronomical        , only : megaParsec
     use :: Numerical_Constants_Units               , only : ergs
     use :: Output_Analyses_Options                 , only : outputAnalysisCovarianceModelBinomial
@@ -290,8 +304,11 @@ contains
     use :: Output_Analysis_Utilities               , only : Output_Analysis_Output_Weight_Survey_Volume
     use :: Output_Analysis_Weight_Operators        , only : outputAnalysisWeightOperatorCsmlgyVolume
     use :: Output_Times                            , only : outputTimesClass
-    use :: Star_Formation_Rates_Disks              , only : starFormationRateDisksClass
-    use :: Star_Formation_Rates_Spheroids          , only : starFormationRateSpheroidsClass
+    use :: Galactic_Structure_Options              , only : componentTypeDisk, componentTypeSpheroid,componentTypeAll, enumerationComponentTypeType
+    use :: Star_Formation_Histories                , only : starFormationHistoryClass
+    use :: HII_Region_Luminosity_Functions         , only : hiiRegionLuminosityFunctionClass
+    use :: HII_Region_Density_Distributions, only : hiiRegionDensityDistributionClass  
+    use :: HII_Region_Escape_Fraction      , only : hiiRegionEscapeFractionClass
     implicit none
     type            (outputAnalysisLuminosityFunctionHalpha         )                                          :: self
     type            (varying_string                                 ), intent(in   )                           :: label                                                 , comment
@@ -305,14 +322,17 @@ contains
     class           (outputAnalysisPropertyOperatorClass            ), intent(inout), target                   :: outputAnalysisPropertyOperator_
     class           (outputAnalysisDistributionOperatorClass        ), intent(in   ), target                   :: outputAnalysisDistributionOperator_
     class           (stellarSpectraDustAttenuationClass             ), intent(in   ), target                   :: stellarSpectraDustAttenuation_
-    class           (starFormationRateDisksClass                    ), intent(in   ), target                   :: starFormationRateDisks_
-    class           (starFormationRateSpheroidsClass                ), intent(in   ), target                   :: starFormationRateSpheroids_
+    class           (starFormationHistoryClass                      ), intent(in   ), target                   :: starFormationHistory_
+    class           (hiiRegionLuminosityFunctionClass               ), intent(in   ), target                   :: hiiRegionLuminosityFunction_
+    class           (hiiRegionDensityDistributionClass              ), intent(in   ), target                   :: hiiRegionDensityDistribution_
+    class           (hiiRegionEscapeFractionClass                   ), intent(in   ), target                   :: hiiRegionEscapeFraction_
     integer                                                          , intent(in   )                           :: covarianceBinomialBinsPerDecade
     double precision                                                 , intent(in   )                           :: covarianceBinomialMassHaloMinimum                     , covarianceBinomialMassHaloMaximum
     type            (varying_string                                 ), intent(in   ), optional                 :: targetLabel
     double precision                                                 , intent(in   ), optional, dimension(:  ) :: functionValueTarget
     double precision                                                 , intent(in   ), optional, dimension(:,:) :: functionCovarianceTarget
-    type            (nodePropertyExtractorLmnstyEmssnLinePanuzzo2003)               , pointer                  :: nodePropertyExtractor_
+    type            (nodePropertyExtractorLuminosityEmissionLine)                   , pointer                  :: nodePropertyExtractorLuminosityEmissionLine_
+    type            (nodePropertyExtractorScalarizerLuminosity      )               , pointer                  :: nodePropertyExtractor_
     type            (outputAnalysisPropertyOperatorLog10            )               , pointer                  :: outputAnalysisPropertyOperatorLog10_
     type            (outputAnalysisPropertyOperatorAntiLog10        )               , pointer                  :: outputAnalysisPropertyOperatorAntiLog10_
     type            (outputAnalysisPropertyOperatorCsmlgyLmnstyDstnc)               , pointer                  :: outputAnalysisPropertyOperatorCsmlgyLmnstyDstnc_
@@ -324,14 +344,16 @@ contains
     type            (normalizerList                                 )               , pointer                  :: normalizerSequence
     type            (propertyOperatorList                           )               , pointer                  :: propertyOperatorSequence
     double precision                                                 , allocatable            , dimension(:,:) :: outputWeight
+    double precision                                                :: toleranceRelative
+    type            (varying_string                                           )                                :: cloudyTableFileName
     type            (varying_string                                 ), allocatable            , dimension(:  ) :: lineNames
+    type(enumerationComponentTypeType)                                                                         :: component
     double precision                                                 , parameter                               :: bufferWidth                                     =1.0d0
     integer         (c_size_t                                       ), parameter                               :: bufferCountMinimum                              =5
     integer         (c_size_t                                       )                                          :: iBin                                                  , bufferCount
     !![
-    <constructorAssign variables="luminosities, depthOpticalISMCoefficient, includeNitrogenII, *surveyGeometry_, *cosmologyFunctions_, *cosmologyFunctionsData, *starFormationRateDisks_, *starFormationRateSpheroids_"/>
+    <constructorAssign variables="label, comment, luminosities, includeNitrogenII, depthOpticalISMCoefficient,*galacticFilter_, *surveyGeometry_,*stellarSpectraDustAttenuation_, *cosmologyFunctions_, *cosmologyFunctionsData, *outputAnalysisPropertyOperator_,*starFormationHistory_,*outputTimes_,*hiiRegionLuminosityFunction_,*hiiRegionDensityDistribution_,*hiiRegionEscapeFraction_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,targetLabel,functionValueTarget,functionCovarianceTarget"/>
     !!]
-
     ! Compute weights that apply to each output redshift.
     self%binCount=size(luminosities,kind=c_size_t)
     allocate(outputWeight(self%binCount,outputTimes_%count()))
@@ -339,7 +361,7 @@ contains
        outputWeight(iBin,:)=Output_Analysis_Output_Weight_Survey_Volume(self%surveyGeometry_,self%cosmologyFunctions_,outputTimes_,luminosity=luminosities(iBin))
     end do
     ! Create a luminosity property extractor.
-    allocate(nodePropertyExtractor_)
+    allocate(nodePropertyExtractorLuminosityEmissionLine_)
     if (includeNitrogenII) then
        allocate(lineNames(3))
        lineNames(1)=var_str('balmerAlpha6565')
@@ -349,8 +371,15 @@ contains
        allocate(lineNames(1))
        lineNames(1)=var_str('balmerAlpha6565')
     end if
+    cloudyTableFileName='%DATASTATICPATH%/hiiRegions/emissionLineLuminosities_BC2003_highResolution_imfChabrier.hdf5'
+    component=componentTypeAll
+    toleranceRelative=1.0d-3
     !![
-    <referenceConstruct object="nodePropertyExtractor_"                           constructor="nodePropertyExtractorLmnstyEmssnLinePanuzzo2003(starFormationRateDisks_,starFormationRateSpheroids_,stellarSpectraDustAttenuation_,outputTimes_           ,lineNames,depthOpticalISMCoefficient,outputMask=sum(outputWeight,dim=1) > 0.0d0)"/>
+    <referenceConstruct object="nodePropertyExtractorLuminosityEmissionLine_"                           constructor="nodePropertyExtractorLuminosityEmissionLine(cloudyTableFileName,component,lineNames,toleranceRelative,starFormationHistory_,outputTimes_,hiiRegionLuminosityFunction_,hiiRegionDensityDistribution_,hiiRegionEscapeFraction_)"/>
+    !!]
+    allocate(nodePropertyExtractor_                                )
+    !![
+    <referenceConstruct object="nodePropertyExtractor_"                           constructor="nodePropertyExtractorScalarizerLuminosity(1,nodePropertyExtractorLuminosityEmissionLine_)"/>
     !!]
     ! Prepend log10 and cosmological luminosity distance property operators.
     allocate(outputAnalysisPropertyOperatorLog10_            )
@@ -476,8 +505,11 @@ contains
     <objectDestructor name="self%stellarSpectraDustAttenuation_"/>
     <objectDestructor name="self%cosmologyFunctions_"           />
     <objectDestructor name="self%cosmologyFunctionsData"        />
-    <objectDestructor name="self%starFormationRateDisks_"       />
-    <objectDestructor name="self%starFormationRateSpheroids_"   />
+    <objectDestructor name="self%starFormationHistory_"       />
+    <objectDestructor name="self%outputTimes_"                  />
+    <objectDestructor name="self%hiiRegionLuminosityFunction_"   />
+    <objectDestructor name="self%hiiRegionDensityDistribution_"/>
+    <objectDestructor name="self%hiiRegionEscapeFraction_"/>
     !!]
     return
   end subroutine luminosityFunctionHalphaDestructor

@@ -65,6 +65,7 @@
      final     ::                 lmnstyEmssnLineAGNDestructor
      procedure :: elementCount => lmnstyEmssnLineAGNElementCount
      procedure :: extract      => lmnstyEmssnLineAGNExtract
+     procedure :: quantity      => lmnstyEmssnLineAGNQuantity
      procedure :: names        => lmnstyEmssnLineAGNNames
      procedure :: descriptions => lmnstyEmssnLineAGNDescriptions
      procedure :: unitsInSI    => lmnstyEmssnLineAGNUnitsInSI
@@ -507,6 +508,20 @@ contains
     end do
     return
   end function lmnstyEmssnLineAGNExtract
+
+  function lmnstyEmssnLineAGNQuantity(self)
+    !!{
+    Return the class of the emission line luminosity property.
+    !!}
+    use :: Output_Analyses_Options, only : outputAnalysisPropertyQuantityLuminosity
+    implicit none
+    type (enumerationOutputAnalysisPropertyQuantityType  )                :: lmnstyEmssnLineAGNQuantity
+    class(nodePropertyExtractorLmnstyEmssnLineAGN), intent(inout) :: self
+    !$GLC attributes unused :: self
+
+    lmnstyEmssnLineAGNQuantity=outputAnalysisPropertyQuantityLuminosity
+    return
+  end function lmnstyEmssnLineAGNQuantity
 
   integer function lmnstyEmssnLineAGNElementCount(self,time)
     !!{

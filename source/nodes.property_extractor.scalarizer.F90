@@ -39,6 +39,7 @@ Implements an output analysis property extractor class that scalarizes one eleme
      procedure :: name        => scalarizerName
      procedure :: description => scalarizerDescription
      procedure :: unitsInSI   => scalarizerUnitsInSI
+     procedure :: quantity    => scalarizerQuantity
   end type nodePropertyExtractorScalarizer
 
   interface nodePropertyExtractorScalarizer
@@ -228,3 +229,15 @@ contains
     end select
     return
   end function scalarizerUnitsInSI
+
+  function scalarizerQuantity(self)
+    !!{
+    Return the units of the scalarizer property in the SI system.
+    !!}
+    implicit none
+    type (enumerationOutputAnalysisPropertyQuantityType)                :: scalarizerQuantity
+    class(nodePropertyExtractorScalarizer              ), intent(inout) :: self
+
+    scalarizerQuantity=self%nodePropertyExtractor_%quantity()
+    return
+  end function scalarizerQuantity
