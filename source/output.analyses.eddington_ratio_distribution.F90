@@ -39,7 +39,7 @@ Implements a Eddington ratio distribution output analysis class.
      class           (surveyGeometryClass         ), pointer                   :: surveyGeometry_     => null()
      class           (cosmologyFunctionsClass     ), pointer                   :: cosmologyFunctions_ => null(), cosmologyFunctionsData => null()
      class           (blackHoleAccretionRateClass ), pointer                   :: blackHoleAccretionRate_ => null()
-     class           (accretionDisksClass         ), pointer                   :: accretionDisks_
+     class           (accretionDisksClass         ), pointer                   :: accretionDisks_         => null()
      double precision                         , allocatable, dimension(:) :: eddingtonRatios
    contains
      final :: eddingtonRatioDistributionDestructor
@@ -207,22 +207,38 @@ contains
     class           (outputTimesClass                       ), intent(inout) , target      :: outputTimes_
     class           (blackHoleAccretionRateClass            ), intent(in   ) , target      :: blackHoleAccretionRate_
     class           (accretionDisksClass                    ), intent(in   ) , target      :: accretionDisks_
-    double precision                                         , dimension(:  ), allocatable :: eddingtonRatios                             , functionValueTarget
+    double precision                                         , dimension(:  ), allocatable :: eddingtonRatios                             , functionValueTarget,functionErrorTarget
     double precision                                         , dimension(:,:), allocatable :: functionCovarianceTarget
     integer                                                  , intent(in   )               :: covarianceBinomialBinsPerDecade
     double precision                                         , intent(in   )               :: covarianceBinomialMassHaloMinimum  , covarianceBinomialMassHaloMaximum
     type            (hdf5Object                             )                              :: dataFile
     type            (varying_string                         )                              :: targetLabel
     logical                                                                                :: haveTarget
+    integer                                                                                :: i
 
     !$ call hdf5Access%set()
-    call dataFile%openFile   (fileName,readOnly=.true.)
-    call dataFile%readDataset('mass'  ,eddingtonRatios         )
-    haveTarget=dataFile%hasDataset('massFunctionObserved').and.dataFile%hasDataset('covariance')
+    call    dataFile%openFile     (fileName              ,readOnly=.true.         )
+    call    dataFile%readDataset  ('EddingtonRatio'   ,eddingtonRatios      )
+    haveTarget=   dataFile%hasDataset('distributionObserved'          ) &
+         &     .and.                                                                 &
+         &      (                                                                    &
+         &        dataFile%hasDataset('distributionObservedCovariance') &
+         &       .or.                                                                &
+         &        dataFile%hasDataset('distributionObservedError'     ) &
+         &      )
     if (haveTarget) then
-       call dataFile%readAttribute('label'               ,targetLabel             )
-       call dataFile%readDataset  ('massFunctionObserved',functionValueTarget     )
-       call dataFile%readDataset  ('covariance'          ,functionCovarianceTarget)
+       call dataFile%readAttribute('label'                            ,targetLabel        )
+       call dataFile%readDataset  ('distributionObserved',functionValueTarget)
+       if (dataFile%hasDataset('distributionObservedCovariance')) then
+          call dataFile%readDataset('distributionObservedCovariance',functionCovarianceTarget)
+       else
+          call dataFile%readDataset('distributionObservedError'     ,functionErrorTarget     )
+          allocate(functionCovarianceTarget(size(functionErrorTarget),size(functionErrorTarget)))
+          functionCovarianceTarget=0.0d0
+          do i=1,size(functionErrorTarget)
+             functionCovarianceTarget(i,i)=functionErrorTarget(i)**2
+          end do
+       end if
     end if
     call dataFile%close      (                        )
     !$ call hdf5Access%unset()
