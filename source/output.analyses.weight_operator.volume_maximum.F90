@@ -114,15 +114,16 @@ contains
     ! Compute the volume associated with each output.
     allocate(self%volumes(self%outputTimes_%count()))
     do iOutput=1_c_size_t,self%outputTimes_%count()
+       write(0,*) "iOutput,1_c_size_t",iOutput==1_c_size_t
        if (iOutput == 1_c_size_t) then
           redshiftMaximum=     self%outputTimes_%redshift(iOutput)
        else
-          redshiftMaximum=sqrt(self%outputTimes_%redshift(iOutput)*self%outputTimes_%redshift(iOutput+1_c_size_t))
+          redshiftMaximum=sqrt(self%outputTimes_%redshift(iOutput)*self%outputTimes_%redshift(iOutput-1_c_size_t))
        end if
        if (iOutput == self%outputTimes_%count()) then
           redshiftMinimum=     self%outputTimes_%redshift(iOutput)
        else
-          redshiftMinimum=sqrt(self%outputTimes_%redshift(iOutput)*self%outputTimes_%redshift(iOutput-1_c_size_t))
+          redshiftMinimum=sqrt(self%outputTimes_%redshift(iOutput)*self%outputTimes_%redshift(iOutput+1_c_size_t))
        end if
        distanceMaximum         =min(                                                                         &
             &                       self%cosmologyFunctions_%distanceComoving           (                    &

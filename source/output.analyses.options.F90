@@ -46,6 +46,7 @@ module Output_Analyses_Options
    <entry label="mass"             />
    <entry label="starFormationRate"/>
    <entry label="luminosity"       />
+   <entry label="eddingtonRatio"       />
   </enumeration>
   !!]
 

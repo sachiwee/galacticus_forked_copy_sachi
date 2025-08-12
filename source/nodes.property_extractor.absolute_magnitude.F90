@@ -159,6 +159,10 @@ contains
     return
   end function magnitudesAbsoluteExtract
 
+
+
+  
+
   subroutine magnitudesAbsoluteNames(self,time,names)
     !!{
     Return the names of the {\normalfont \ttfamily magnitudesAbsolute} properties.

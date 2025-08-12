@@ -168,6 +168,8 @@ contains
 
     return
   end function eddingtonRatioExtract
+  
+  
 
   subroutine eddingtonRatioNames(self,names)
     !!{
