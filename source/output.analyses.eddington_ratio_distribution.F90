@@ -261,7 +261,7 @@ contains
     use :: Cosmology_Functions                     , only : cosmologyFunctionsClass
     use :: Galactic_Filters                        , only : galacticFilterClass
     use :: ISO_Varying_String                      , only : var_str                                    , varying_string
-    use :: Node_Property_Extractors                , only : nodePropertyExtractorEddingtonRatio, nodePropertyExtractorMagnitudesAbsolute, nodePropertyExtractorScalarizer
+    use :: Node_Property_Extractors                , only : nodePropertyExtractorEddingtonRatio, nodePropertyExtractorMagnitudeAbsolute, nodePropertyExtractorScalarizer
     use :: Numerical_Constants_Astronomical        , only : massSolar                                  , megaParsec
     use :: Output_Analyses_Options                 , only : outputAnalysisCovarianceModelBinomial
     use :: Output_Analysis_Distribution_Normalizers, only : normalizerList                             , outputAnalysisDistributionNormalizerBinWidth, outputAnalysisDistributionNormalizerLog10ToLog , outputAnalysisDistributionNormalizerSequence
@@ -287,9 +287,8 @@ contains
     double precision                                                 , intent(in   ), optional, dimension(:  ) :: functionValueTarget
     double precision                                                 , intent(in   ), optional, dimension(:,:) :: functionCovarianceTarget
     type            (nodePropertyExtractorEddingtonRatio            ), pointer                                 :: nodePropertyExtractorEddingtonRatio_
-    type            (nodePropertyExtractorMagnitudesAbsolute        ), pointer                                 :: outputAnalysisWeightPropertyExtractor_
+    type            (nodePropertyExtractorMagnitudeAbsolute         ), pointer                                 :: outputAnalysisWeightPropertyExtractor_
     type            (nodePropertyExtractorScalarizer                )               , pointer                  :: nodePropertyExtractor_
-    type            (nodePropertyExtractorScalarizer                )               , pointer                  :: nodePropertyExtractorAbsMag_
     type            (outputAnalysisPropertyOperatorLog10            )               , pointer                  :: outputAnalysisPropertyOperatorLog10_
     type            (outputAnalysisPropertyOperatorAntiLog10        )               , pointer                  :: outputAnalysisPropertyOperatorAntiLog10_
     type            (outputAnalysisPropertyOperatorCsmlgyLmnstyDstnc)               , pointer                  :: outputAnalysisPropertyOperatorCsmlgyLmnstyDstnc_
@@ -320,7 +319,7 @@ contains
     !!]
     allocate(nodePropertyExtractor_                                )
     !![
-    <referenceConstruct object="nodePropertyExtractor_"                           constructor="nodePropertyExtractorScalarizer               (1,nodePropertyExtractorEddingtonRatio_                                                  )"/>
+    <referenceConstruct object="nodePropertyExtractor_"                           constructor="nodePropertyExtractorScalarizer               (1,1,nodePropertyExtractorEddingtonRatio_                                                  )"/>
     !!]
     ! Prepend log10 and cosmological luminosity distance property operators.
     allocate(outputAnalysisPropertyOperatorLog10_            )
@@ -330,6 +329,11 @@ contains
     allocate(outputAnalysisPropertyOperatorAntiLog10_        )
     !![
     <referenceConstruct object="outputAnalysisPropertyOperatorAntiLog10_"         constructor="outputAnalysisPropertyOperatorAntiLog10        (                                                       )"/>
+    !!]
+     ! Create a cosmological volume correction weight operator.
+    allocate(outputAnalysisWeightOperator_)
+    !![
+    <referenceConstruct object="outputAnalysisWeightOperator_"                   constructor="outputAnalysisWeightOperatorVolumeMaximum      (cosmologyFunctions_,surveyGeometry_,outputTimes_,outputAnalysisWeightPropertyExtractor_)"/>
     !!]
     allocate(outputAnalysisPropertyOperatorCsmlgyLmnstyDstnc_)
     !![
@@ -355,9 +359,9 @@ contains
        !!]
     end select
     ! Create a cosmological volume correction weight operator.
-    allocate(outputAnalysisWeightOperator_)
+    allocate(outputAnalysisWeightPropertyExtractor_)
     !![
-    <referenceConstruct object="outputAnalysisWeightOperator_" constructor="outputAnalysisWeightOperatorVolumeMaximum(cosmologyFunctions_,surveyGeometry_,outputTimes_,nodePropertyExtractorAbsMag_)"/>
+    <referenceConstruct object="outputAnalysisWeightPropertyExtractor_" constructor="nodePropertyExtractorMagnitudeAbsolute(nodePropertyExtractor_)"/>
     !!]
     ! Create a bin width distribution normalizer.
     allocate(outputAnalysisDistributionNormalizerBinWidth_  )
@@ -418,6 +422,7 @@ contains
          &                               )
     ! Clean up.
     !![
+    <objectDestructor name="nodePropertyExtractorEddingtonRatio_"            />
     <objectDestructor name="nodePropertyExtractor_"                          />
     <objectDestructor name="outputAnalysisPropertyOperatorLog10_"            />
     <objectDestructor name="outputAnalysisPropertyOperatorAntiLog10_"        />
