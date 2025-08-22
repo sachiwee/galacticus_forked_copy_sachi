@@ -77,10 +77,10 @@ contains
          &                                                                                    functionCovarianceTarget1D
     double precision                                         , dimension(:,:), allocatable :: functionCovarianceTarget
     integer                                                                                :: covarianceBinomialBinsPerDecade
-    double precision                                                                       :: covarianceBinomialMassHaloMinimum  , covarianceBinomialMassHaloMaximum
+    double precision                                                                       :: covarianceBinomialMassHaloMinimum  , covarianceBinomialMassHaloMaximum,redshiftBand
     type            (inputParameters                        )                              :: dataAnalysisParameters
     type            (varying_string                         )                              :: label                              , comment                          , &
-         &                                                                                    targetLabel
+         &                                                                                    targetLabel, filterName, filterType
 
     ! Check and read parameters.
     dataAnalysisParameters=parameters%subParameters('dataAnalysis',requirePresent=.false.,requireValue=.false.)
@@ -170,7 +170,7 @@ contains
     <objectBuilder class="blackHoleAccretionRate"             name="blackHoleAccretionRate_"             source="parameters"            />
     <objectBuilder class="accretionDisks"                     name="accretionDisks_"                     source="parameters"            />
     <conditionalCall>
-     <call>self=outputAnalysisEddingtonRatioDistribution(label,comment,eddingtonRatios,galacticFilter_,surveyGeometry_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,blackHoleAccretionRate_,accretionDisks_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum{conditions})</call>
+     <call>self=outputAnalysisEddingtonRatioDistribution(label,comment,eddingtonRatios,galacticFilter_,surveyGeometry_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,blackHoleAccretionRate_,accretionDisks_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,char(filterName),char(filterType),redshiftBand{conditions})</call>
      <argument name="targetLabel"              value="targetLabel"              parameterPresent="parameters"/>
      <argument name="functionValueTarget"      value="functionValueTarget"      parameterPresent="parameters"/>
      <argument name="functionCovarianceTarget" value="functionCovarianceTarget" parameterPresent="parameters"/>
@@ -189,7 +189,7 @@ contains
     return
   end function eddingtonRatioDistributionConstructorParameters
 
-  function eddingtonRatioDistributionConstructorFile(label,comment,fileName,galacticFilter_,surveyGeometry_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,blackHoleAccretionRate_,accretionDisks_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum) result (self)
+  function eddingtonRatioDistributionConstructorFile(label,comment,fileName,galacticFilter_,surveyGeometry_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,blackHoleAccretionRate_,accretionDisks_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,filterName,filterType,redshiftBand) result (self)
     !!{
     Constructor for the \refClass{outputAnalysisEddingtonRatioDistribution} output analysis class which reads bin information from a standard format file.
     !!}
@@ -215,7 +215,8 @@ contains
     type            (varying_string                         )                              :: targetLabel
     logical                                                                                :: haveTarget
     integer                                                                                :: i
-
+    character       (len=*                                  ), intent(in   )               :: filterName                         , filterType
+    double precision                                         , intent(in   ) , optional    :: redshiftBand
     !$ call hdf5Access%set()
     call    dataFile%openFile     (fileName              ,readOnly=.true.         )
     call    dataFile%readDataset  ('EddingtonRatio'   ,eddingtonRatios      )
@@ -245,7 +246,7 @@ contains
     ! Construct the object.
     !![
     <conditionalCall>
-     <call>self=outputAnalysisEddingtonRatioDistribution(label,comment,eddingtonRatios,galacticFilter_,surveyGeometry_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,blackHoleAccretionRate_,accretionDisks_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum{conditions})</call>
+     <call>self=outputAnalysisEddingtonRatioDistribution(label,comment,eddingtonRatios,galacticFilter_,surveyGeometry_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,blackHoleAccretionRate_,accretionDisks_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,filterName,filterType,redshiftBand{conditions})</call>
      <argument name="targetLabel"              value="targetLabel"              condition="haveTarget"/>
      <argument name="functionValueTarget"      value="functionValueTarget"      condition="haveTarget"/>
      <argument name="functionCovarianceTarget" value="functionCovarianceTarget" condition="haveTarget"/>
@@ -254,14 +255,14 @@ contains
     return
   end function eddingtonRatioDistributionConstructorFile
 
-  function eddingtonRatioDistributionConstructorInternal(label,comment,eddingtonRatios,galacticFilter_,surveyGeometry_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,blackHoleAccretionRate_,accretionDisks_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,targetLabel,functionValueTarget,functionCovarianceTarget) result(self)
+  function eddingtonRatioDistributionConstructorInternal(label,comment,eddingtonRatios,galacticFilter_,surveyGeometry_,cosmologyFunctions_,cosmologyFunctionsData,outputAnalysisPropertyOperator_,outputAnalysisDistributionOperator_,outputTimes_,blackHoleAccretionRate_,accretionDisks_,covarianceBinomialBinsPerDecade,covarianceBinomialMassHaloMinimum,covarianceBinomialMassHaloMaximum,filterName,filterType,redshiftBand,targetLabel,functionValueTarget,functionCovarianceTarget) result(self)
     !!{
     Constructor for the \refClass{outputAnalysisEddingtonRatioDistribution} output analysis class which takes a parameter set as input.
     !!}
     use :: Cosmology_Functions                     , only : cosmologyFunctionsClass
     use :: Galactic_Filters                        , only : galacticFilterClass
     use :: ISO_Varying_String                      , only : var_str                                    , varying_string
-    use :: Node_Property_Extractors                , only : nodePropertyExtractorEddingtonRatio, nodePropertyExtractorMagnitudeAbsolute, nodePropertyExtractorScalarizer
+    use :: Node_Property_Extractors                , only : nodePropertyExtractorEddingtonRatio, nodePropertyExtractorMagnitudeAbsolute, nodePropertyExtractorScalarizer,nodePropertyExtractorLmnstyStllrCF2000
     use :: Numerical_Constants_Astronomical        , only : massSolar                                  , megaParsec
     use :: Output_Analyses_Options                 , only : outputAnalysisCovarianceModelBinomial
     use :: Output_Analysis_Distribution_Normalizers, only : normalizerList                             , outputAnalysisDistributionNormalizerBinWidth, outputAnalysisDistributionNormalizerLog10ToLog , outputAnalysisDistributionNormalizerSequence
@@ -288,6 +289,7 @@ contains
     double precision                                                 , intent(in   ), optional, dimension(:,:) :: functionCovarianceTarget
     type            (nodePropertyExtractorEddingtonRatio            ), pointer                                 :: nodePropertyExtractorEddingtonRatio_
     type            (nodePropertyExtractorMagnitudeAbsolute         ), pointer                                 :: outputAnalysisWeightPropertyExtractor_
+    type            (nodePropertyExtractorLmnstyStllrCF2000         ), pointer                                 :: nodePropertyExtractorLmnstyStllrCF2000_
     type            (nodePropertyExtractorScalarizer                )               , pointer                  :: nodePropertyExtractor_
     type            (outputAnalysisPropertyOperatorLog10            )               , pointer                  :: outputAnalysisPropertyOperatorLog10_
     type            (outputAnalysisPropertyOperatorAntiLog10        )               , pointer                  :: outputAnalysisPropertyOperatorAntiLog10_
@@ -303,6 +305,8 @@ contains
     double precision                                                 , parameter                               :: bufferWidthLogarithmic                          =3.0d0
     integer         (c_size_t                                       ), parameter                               :: bufferCountMinimum                              =5
     integer         (c_size_t                                       )                                          :: iBin                                                  , bufferCount
+    character       (len=*                                           ), intent(in   )                           :: filterName                                            , filterType
+    double precision                                                  , intent(in   ), optional                 :: redshiftBand
     !![
     <constructorAssign variables="eddingtonRatios, *surveyGeometry_, *cosmologyFunctions_, *cosmologyFunctionsData, *blackHoleAccretionRate_, *accretionDisks_"/>
     !!]
@@ -312,7 +316,7 @@ contains
     allocate(outputWeight(self%binCount,outputTimes_%count()))
     
     outputWeight=1.0d0
-    ! Create a stellar mass property extractor.
+    ! Create a eddington ratio property extractor.
     allocate(nodePropertyExtractorEddingtonRatio_)
     !![
     <referenceConstruct object="nodePropertyExtractorEddingtonRatio_"                           constructor="nodePropertyExtractorEddingtonRatio            ( blackHoleAccretionRate_,accretionDisks_               )"/>
@@ -320,6 +324,16 @@ contains
     allocate(nodePropertyExtractor_                                )
     !![
     <referenceConstruct object="nodePropertyExtractor_"                           constructor="nodePropertyExtractorScalarizer               (1,1,nodePropertyExtractorEddingtonRatio_                                                  )"/>
+    !!]
+    ! Create stellar luminosity property extractor
+    allocate(nodePropertyExtractorLmnstyStllrCF2000_)
+    !![
+    <referenceConstruct object="nodePropertyExtractorLmnstyStllrCF2000_"                           constructor="nodePropertyExtractorLmnstyStllrCF2000(filterName='SDSS_r'        ,filterType='observed'  ,depthOpticalISMCoefficient=1.0d0,depthOpticalCloudsCoefficient=1.0d0,wavelengthExponent          =0.7d0,outputTimes_=outputTimes_,redshiftBand=0.2d0,outputMask=sum(outputWeight,dim=1) > 0.0d0)"/>
+    !!]
+    ! Create absolute magnitude property extractor
+    allocate(outputAnalysisWeightPropertyExtractor_)
+    !![
+    <referenceConstruct object="outputAnalysisWeightPropertyExtractor_"             constructor="nodePropertyExtractorMagnitudeAbsolute            ( nodePropertyExtractorLmnstyStllrCF2000_        )"/>
     !!]
     ! Prepend log10 and cosmological luminosity distance property operators.
     allocate(outputAnalysisPropertyOperatorLog10_            )
@@ -358,11 +372,6 @@ contains
        <referenceConstruct object="outputAnalysisPropertyOperatorSequence_" constructor="outputAnalysisPropertyOperatorSequence(propertyOperatorSequence)"/>
        !!]
     end select
-    ! Create a cosmological volume correction weight operator.
-    allocate(outputAnalysisWeightPropertyExtractor_)
-    !![
-    <referenceConstruct object="outputAnalysisWeightPropertyExtractor_" constructor="nodePropertyExtractorMagnitudeAbsolute(nodePropertyExtractor_)"/>
-    !!]
     ! Create a bin width distribution normalizer.
     allocate(outputAnalysisDistributionNormalizerBinWidth_  )
     !![

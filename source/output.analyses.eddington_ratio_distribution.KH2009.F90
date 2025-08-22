@@ -293,7 +293,10 @@ contains
          &                                         accretionDisks_                                                                                                               , &
          &                                         covarianceBinomialBinsPerDecade                                                                                               , &
          &                                         covarianceBinomialMassHaloMinimum                                                                                             , &
-         &                                         covarianceBinomialMassHaloMaximum                                                                                               &
+         &                                         covarianceBinomialMassHaloMaximum                                                                                             , &
+         &                                         filterName='SDSS_r'                                                                                                           , &
+         &                                         filterType  ='observed'                                                                                                       , &
+         &                                         redshiftBand=0.2d0                                                                                                              &
          &                                        )
     ! Clean up.
     !![
