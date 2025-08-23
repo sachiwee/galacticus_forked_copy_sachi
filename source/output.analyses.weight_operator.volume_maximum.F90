@@ -114,7 +114,6 @@ contains
     ! Compute the volume associated with each output.
     allocate(self%volumes(self%outputTimes_%count()))
     do iOutput=1_c_size_t,self%outputTimes_%count()
-       write(0,*) "iOutput,1_c_size_t",iOutput==1_c_size_t
        if (iOutput == 1_c_size_t) then
           redshiftMaximum=     self%outputTimes_%redshift(iOutput)
        else

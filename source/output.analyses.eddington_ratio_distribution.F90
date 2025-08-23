@@ -328,7 +328,7 @@ contains
     ! Create stellar luminosity property extractor
     allocate(nodePropertyExtractorLmnstyStllrCF2000_)
     !![
-    <referenceConstruct object="nodePropertyExtractorLmnstyStllrCF2000_"                           constructor="nodePropertyExtractorLmnstyStllrCF2000(filterName='SDSS_r'        ,filterType='observed'  ,depthOpticalISMCoefficient=1.0d0,depthOpticalCloudsCoefficient=1.0d0,wavelengthExponent          =0.7d0,outputTimes_=outputTimes_,redshiftBand=0.2d0,outputMask=sum(outputWeight,dim=1) > 0.0d0)"/>
+    <referenceConstruct object="nodePropertyExtractorLmnstyStllrCF2000_"                           constructor="nodePropertyExtractorLmnstyStllrCF2000(filterName=filterName        ,filterType=filterType  ,depthOpticalISMCoefficient=1.0d0,depthOpticalCloudsCoefficient=1.0d0,wavelengthExponent          =0.7d0,outputTimes_=outputTimes_,redshiftBand=redshiftBand,outputMask=sum(outputWeight,dim=1) > 0.0d0)"/>
     !!]
     ! Create absolute magnitude property extractor
     allocate(outputAnalysisWeightPropertyExtractor_)
@@ -344,7 +344,7 @@ contains
     !![
     <referenceConstruct object="outputAnalysisPropertyOperatorAntiLog10_"         constructor="outputAnalysisPropertyOperatorAntiLog10        (                                                       )"/>
     !!]
-     ! Create a cosmological volume correction weight operator.
+     ! Create a volume correction weight operator.
     allocate(outputAnalysisWeightOperator_)
     !![
     <referenceConstruct object="outputAnalysisWeightOperator_"                   constructor="outputAnalysisWeightOperatorVolumeMaximum      (cosmologyFunctions_,surveyGeometry_,outputTimes_,outputAnalysisWeightPropertyExtractor_)"/>
