@@ -173,7 +173,9 @@ contains
     use            :: Error                  , only : Error_Report
     use, intrinsic :: ISO_C_Binding          , only : c_size_t
     use            :: Output_Analyses_Options, only : outputAnalysisPropertyQuantityLuminosity, outputAnalysisPropertyQuantityStarFormationRate,outputAnalysisPropertyQuantityMass, outputAnalysisPropertyTypeLinear, &
-          &                                           outputAnalysisPropertyTypeMagnitude     , outputAnalysisPropertyTypeLog10
+         &                                           outputAnalysisPropertyTypeMagnitude     , outputAnalysisPropertyTypeLog10, outputAnalysisPropertyQuantityUnknown, &
+         &                                           outputAnalysisPropertyTypeUnknown, enumerationOutputAnalysisPropertyQuantityDecode
+    use            :: Node_Property_Extractors, only : nodePropertyExtractorScalar
     implicit none
     class           (outputAnalysisWeightOperatorVolumeMaximum    ), intent(inout) :: self
     type            (treeNode                                     ), intent(inout) :: node
@@ -183,26 +185,38 @@ contains
     type            (enumerationOutputAnalysisPropertyQuantityType), intent(in   ) :: propertyQuantity
     integer         (c_size_t                                     ), intent(in   ) :: outputIndex
     double precision                                                               :: distanceMinimum , distanceMaximum       , &
-         &                                                                            volumeMaximum
-    !$GLC attributes unused :: node
+         &                                                                            volumeMaximum   , weightPropertyValue
+    type            (enumerationOutputAnalysisPropertyTypeType    )                :: weightPropertyType
+    type            (enumerationOutputAnalysisPropertyQuantityType)                :: weightPropertyQuantity
 
     ! Compute Vₘₐₓ for this node.
-    select case (propertyQuantity%ID)
+    select type (extractor_ => self%nodePropertyExtractor_)
+    class is (nodePropertyExtractorScalar)
+       weightPropertyValue   =extractor_%extract (node)
+       weightPropertyType    =extractor_%type    (    )
+       weightPropertyQuantity=extractor_%quantity(    )
+    class default
+       weightPropertyValue   =0.0d0
+       weightPropertyType    =outputAnalysisPropertyTypeUnknown
+       weightPropertyQuantity=outputAnalysisPropertyQuantityUnknown
+       call Error_Report('`nodePropertyExtractorScalar` expected'//{introspection:location})
+    end select
+    select case (weightPropertyQuantity%ID)
     case (outputAnalysisPropertyQuantityMass      %ID)
-       select case (propertyType%ID)
+       select case (weightPropertyType%ID)
        case (outputAnalysisPropertyTypeLinear   %ID)
           distanceMinimum   =+self%surveyGeometry_%distanceMinimum(                                          &
-               &                                                   mass             =propertyValue           &
+               &                                                   mass             =weightPropertyValue     &
                &                                                  )
           distanceMaximum   =+self%surveyGeometry_%distanceMaximum(                                          &
-               &                                                   mass             =propertyValue           &
+               &                                                   mass             =weightPropertyValue     &
                &                                                  )
        case (outputAnalysisPropertyTypeLog10    %ID)
           distanceMinimum   =+self%surveyGeometry_%distanceMinimum(                                          &
-               &                                                   mass             =propertyValueIntrinsic  &
+               &                                                   mass             =weightPropertyValue     &
                &                                                  )
           distanceMaximum   =+self%surveyGeometry_%distanceMaximum(                                          &
-               &                                                   mass             =propertyValueIntrinsic  &
+               &                                                   mass             =weightPropertyValue     &
                &                                                  )
        case default
           distanceMinimum   =+0.0d0
@@ -210,27 +224,27 @@ contains
           call Error_Report('unsupported property type' //{introspection:location})
        end select
     case (outputAnalysisPropertyQuantityLuminosity%ID)
-       select case (propertyType%ID)
+       select case (weightPropertyType%ID)
        case (outputAnalysisPropertyTypeLinear   %ID)
           distanceMinimum   =+self%surveyGeometry_%distanceMinimum(                                          &
-               &                                                   luminosity       =propertyValue           &
+               &                                                   luminosity       =weightPropertyValue     &
                &                                                  )
           distanceMaximum   =+self%surveyGeometry_%distanceMaximum(                                          &
-               &                                                   luminosity       =propertyValue           &
+               &                                                   luminosity       =weightPropertyValue     &
                &                                                  )
        case (outputAnalysisPropertyTypeLog10    %ID)
           distanceMinimum   =+self%surveyGeometry_%distanceMinimum(                                          &
-               &                                                   luminosity       =propertyValueIntrinsic  &
+               &                                                   luminosity       =weightPropertyValue     &
                &                                                  )
           distanceMaximum   =+self%surveyGeometry_%distanceMaximum(                                          &
-               &                                                   luminosity       =propertyValueIntrinsic  &
+               &                                                   luminosity       =weightPropertyValue     &
                &                                                  )
        case (outputAnalysisPropertyTypeMagnitude    %ID)
           distanceMinimum   =+self%surveyGeometry_%distanceMinimum(                                          &
-               &                                                   magnitudeAbsolute=propertyValue           &
+               &                                                   magnitudeAbsolute=weightPropertyValue     &
                &                                                  )
           distanceMaximum   =+self%surveyGeometry_%distanceMaximum(                                          &
-               &                                                   magnitudeAbsolute=propertyValue           &
+               &                                                   magnitudeAbsolute=weightPropertyValue     &
                &                                                  )
        case default
           distanceMinimum   =+0.0d0
@@ -238,20 +252,20 @@ contains
           call Error_Report('unsupported property type' //{introspection:location})
        end select
     case (outputAnalysisPropertyQuantityStarFormationRate%ID)
-       select case (propertyType%ID)
+       select case (weightPropertyType%ID)
        case (outputAnalysisPropertyTypeLinear   %ID)
           distanceMinimum   =+self%surveyGeometry_%distanceMinimum(                                          &
-               &                                                   starFormationRate=propertyValue           &
+               &                                                   starFormationRate=weightPropertyValue     &
                &                                                  )
           distanceMaximum   =+self%surveyGeometry_%distanceMaximum(                                          &
-               &                                                   starFormationRate=propertyValue           &
+               &                                                   starFormationRate=weightPropertyValue     &
                &                                                  )
        case (outputAnalysisPropertyTypeLog10    %ID)
           distanceMinimum   =+self%surveyGeometry_%distanceMinimum(                                          &
-               &                                                   starFormationRate=propertyValueIntrinsic  &
+               &                                                   starFormationRate=weightPropertyValue     &
                &                                                  )
           distanceMaximum   =+self%surveyGeometry_%distanceMaximum(                                          &
-               &                                                   starFormationRate=propertyValueIntrinsic  &
+               &                                                   starFormationRate=weightPropertyValue     &
                &                                                  )
        case default
           distanceMinimum   =+0.0d0
@@ -261,7 +275,7 @@ contains
     case default
        distanceMinimum      =+0.0d0
        distanceMaximum      =+0.0d0
-       call    Error_Report('unsupported property class'//{introspection:location})
+       call    Error_Report("unsupported property class '"//enumerationOutputAnalysisPropertyQuantityDecode(propertyQuantity)//"'"//{introspection:location})
     end select
     volumeMaximum=+distanceMaximum**3 &
          &        -distanceMinimum**3
