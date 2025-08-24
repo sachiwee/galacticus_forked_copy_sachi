@@ -31,6 +31,7 @@ module Output_Analyses_Options
   <enumeration>
    <name>outputAnalysisPropertyType</name>
    <description>Property types.</description>
+   <decodeFunction>yes</decodeFunction>
    <entry label="linear"    />
    <entry label="log10"     />
    <entry label="magnitude" />
@@ -41,12 +42,13 @@ module Output_Analyses_Options
   !![
   <enumeration>
    <name>outputAnalysisPropertyQuantity</name>
+   <decodeFunction>yes</decodeFunction>
    <description>Property quantities.</description>
    <entry label="unknown"          />
    <entry label="mass"             />
    <entry label="starFormationRate"/>
    <entry label="luminosity"       />
-   <entry label="eddingtonRatio"       />
+   <entry label="eddingtonRatio"   />
   </enumeration>
   !!]
 
