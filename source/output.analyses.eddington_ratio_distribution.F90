@@ -399,11 +399,11 @@ contains
          &                                comment                                                   , &
          &                                var_str('eddingtonRatio'                                    ), &
          &                                var_str('Eddington ratio at the bin center'                 ), &
-         &                                var_str(''                                            ), &
+         &                                var_str('dimensionless'                                     ), &
          &                                1.0d0                                                 , &
          &                                var_str('distributionFunction'                                  ), &
          &                                var_str('Eddington ratio distribution averaged over each bin '  ), &
-         &                                var_str(''                                         ), &
+         &                                var_str('dimensionless'                                         ), &
          &                                1.0d0                                          , &
          &                                log10(eddingtonRatios)                                             , &
          &                                bufferCount                                               , &
