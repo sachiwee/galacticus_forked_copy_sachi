@@ -1,5 +1,5 @@
 !! Copyright 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018,
-!!           2019, 2020, 2021, 2022, 2023, 2024, 2025
+!!           2019, 2020, 2021, 2022, 2023, 2024
 !!    Andrew Benson <abenson@carnegiescience.edu>
 !!
 !! This file is part of Galacticus.
@@ -94,7 +94,7 @@
 
   interface accretionHaloColdMode
      !!{
-     Constructors for the \refClass{accretionHaloColdMode} halo accretion class.
+     Constructors for the {\normalfont \ttfamily coldMode} halo accretion class.
      !!}
      module procedure coldModeConstructorParameters
      module procedure coldModeConstructorInternal
@@ -136,14 +136,15 @@ contains
     return
   end function coldModeConstructorParameters
 
-  function coldModeConstructorInternal(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,thresholdStabilityShock,widthTransitionStabilityShock,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_,coolingFunction_) result(self)
+  function coldModeConstructorInternal(timeReionization,timeQuench,velocitySuppressionReionization,velocitySuppressionQuench,accretionNegativeAllowed,accretionNewGrowthOnly,thresholdStabilityShock,widthTransitionStabilityShock,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_,coolingFunction_) result(self)
     !!{
-    Internal constructor for the \refClass{accretionHaloColdMode} halo accretion class.
+    Internal constructor for the {\normalfont \ttfamily coldMode} halo accretion class.
     !!}
     implicit none
     type            (accretionHaloColdMode        )                        :: self
     double precision                               , intent(in   )         :: timeReionization        , velocitySuppressionReionization, &
-         &                                                                    thresholdStabilityShock , widthTransitionStabilityShock
+         &                                                                    thresholdStabilityShock , widthTransitionStabilityShock,   &
+         &                                                                    timeQuench              , velocitySuppressionQuench
     logical                                        , intent(in   )         :: accretionNegativeAllowed, accretionNewGrowthOnly
     class           (cosmologyParametersClass     ), intent(in   ), target :: cosmologyParameters_
     class           (cosmologyFunctionsClass      ), intent(in   ), target :: cosmologyFunctions_
@@ -155,8 +156,7 @@ contains
     !![
     <constructorAssign variables="thresholdStabilityShock, widthTransitionStabilityShock, *coolingFunction_"/>
     !!]
-
-    self%accretionHaloSimple=accretionHaloSimple(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_)
+    self%accretionHaloSimple=accretionHaloSimple(timeReionization,timeQuench,velocitySuppressionReionization,velocitySuppressionQuench,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_)
     call self%initialize()
     return
   end function coldModeConstructorInternal
@@ -187,7 +187,7 @@ contains
 
   subroutine coldModeDestructor(self)
     !!{
-    Destructor for the \refClass{accretionHaloColdMode} halo accretion class.
+    Destructor for the {\normalfont \ttfamily coldMode} halo accretion class.
     !!}
     use :: Events_Hooks, only : calculationResetEvent
     implicit none

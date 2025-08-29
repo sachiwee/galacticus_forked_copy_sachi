@@ -1,5 +1,5 @@
 !! Copyright 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018,
-!!           2019, 2020, 2021, 2022, 2023, 2024, 2025
+!!           2019, 2020, 2021, 2022, 2023, 2024
 !!    Andrew Benson <abenson@carnegiescience.edu>
 !!
 !! This file is part of Galacticus.
@@ -74,11 +74,11 @@ contains
     !!{
     Compute the Chandrasekhar integral at the specified {\normalfont \ttfamily coordinates} in a spherical mass distribution.
     !!}
-    use :: Coordinates                     , only : coordinateCartesian           , coordinateSpherical, coordinateCylindrical       , assignment(=)
-    use :: Galactic_Structure_Options      , only : componentTypeAll              , massTypeAll        , enumerationComponentTypeType, enumerationMassTypeType
+    use :: Coordinates                     , only : coordinateCartesian            , coordinateSpherical, coordinateCylindrical       , assignment(=)
+    use :: Galactic_Structure_Options      , only : componentTypeAll               , massTypeAll        , enumerationComponentTypeType, enumerationMassTypeType
     use :: Numerical_Constants_Math        , only : Pi
-    use :: Numerical_Constants_Astronomical, only : gravitationalConstant_internal
-    use :: Linear_Algebra                  , only : vector                        , matrix             , assignment(=)
+    use :: Numerical_Constants_Astronomical, only : gravitationalConstantGalacticus
+    use :: Linear_Algebra                  , only : vector                         , matrix             , assignment(=)
     implicit none
     double precision                                   , dimension(3)  :: cylindricalChandrasekharIntegral
     class           (massDistributionCylindrical      ), intent(inout) :: self
@@ -144,7 +144,7 @@ contains
          &                       /densityMidPlane
     ! Compute normalization of the radial velocity dispersion.
     velocityDispersionRadialHalfMass=+toomreQFactor                    &
-         &                           *gravitationalConstant_internal   &
+         &                           *gravitationalConstantGalacticus  &
          &                           *densitySurfaceRadiusHalfMass     &
          &                           *toomreQRadiusHalfMass            &
          &                           /frequencyEpicyclicHalfMassRadius
@@ -155,7 +155,7 @@ contains
          &                            /densitySurfaceRadiusHalfMass    &
          &                           )
     velocityDispersionAzimuthal=+velocityDispersionRadial*frequencyEpicyclic/2.0d0/frequencyCircular
-    velocityDispersionVertical =+sqrt(Pi*gravitationalConstant_internal*densitySurface*heightScale)
+    velocityDispersionVertical =+sqrt(Pi*gravitationalConstantGalacticus*densitySurface*heightScale)
     velocityDispersionMaximum  =+maxval([velocityDispersionRadial,velocityDispersionAzimuthal,velocityDispersionVertical])
     if (velocityDispersionMaximum <= 0.0d0) return
     velocityDispersionRadial   =+velocityDispersionRadial   /velocityDispersionMaximum

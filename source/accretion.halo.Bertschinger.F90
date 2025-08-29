@@ -1,5 +1,5 @@
 !! Copyright 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018,
-!!           2019, 2020, 2021, 2022, 2023, 2024, 2025
+!!           2019, 2020, 2021, 2022, 2023, 2024
 !!    Andrew Benson <abenson@carnegiescience.edu>
 !!
 !! This file is part of Galacticus.
@@ -43,7 +43,7 @@
 
   interface accretionHaloBertschinger
      !!{
-     Constructors for the \refClass{accretionHaloBertschinger} halo accretion class.
+     Constructors for the {\normalfont \ttfamily bertschinger} halo accretion class.
      !!}
      module procedure bertschingerConstructorParameters
      module procedure bertschingerConstructorInternal
@@ -68,13 +68,14 @@ contains
     return
   end function bertschingerConstructorParameters
 
-  function bertschingerConstructorInternal(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_,darkMatterProfileDMO_) result(self)
+  function bertschingerConstructorInternal(timeReionization,timeQuench,velocitySuppressionReionization,velocitySuppressionQuench,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_,darkMatterProfileDMO_) result(self)
     !!{
-    Internal constructor for the \refClass{accretionHaloBertschinger} halo accretion class.
+    Internal constructor for the {\normalfont \ttfamily bertschinger} halo accretion class.
     !!}
     implicit none
     type            (accretionHaloBertschinger    )                        :: self
-    double precision                               , intent(in   )         :: timeReionization        , velocitySuppressionReionization
+    double precision                               , intent(in   )         :: timeReionization        , velocitySuppressionReionization,&
+          &                                                                   timeQuench              , velocitySuppressionQuench
     logical                                        , intent(in   )         :: accretionNegativeAllowed, accretionNewGrowthOnly
     class           (cosmologyParametersClass     ), intent(in   ), target :: cosmologyParameters_
     class           (cosmologyFunctionsClass      ), intent(in   ), target :: cosmologyFunctions_
@@ -87,13 +88,13 @@ contains
     <constructorAssign variables="*darkMatterProfileDMO_"/>
     !!]
 
-    self%accretionHaloSimple=accretionHaloSimple(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_)
+    self%accretionHaloSimple=accretionHaloSimple(timeReionization,timeQuench,velocitySuppressionReionization,velocitySuppressionQuench,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_)
     return
   end function bertschingerConstructorInternal
 
   subroutine bertschingerDestructor(self)
     !!{
-    Destructor for the \refClass{accretionHaloBertschinger} halo accretion class.
+    Destructor for the {\normalfont \ttfamily bertschinger} halo accretion class.
     !!}
     implicit none
     type(accretionHaloBertschinger), intent(inout) :: self
@@ -104,7 +105,7 @@ contains
     return
   end subroutine bertschingerDestructor
 
-  double precision function bertschingerVelocityScale(self,node) result(velocityScale)
+   double precision function bertschingerVelocityScale(self,node) result(velocityScale)
     !!{
     Returns the velocity scale to use for {\normalfont \ttfamily node}. Use the maximum circular velocity.
     !!}

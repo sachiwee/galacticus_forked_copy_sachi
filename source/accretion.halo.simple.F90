@@ -1,5 +1,5 @@
 !! Copyright 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018,
-!!           2019, 2020, 2021, 2022, 2023, 2024, 2025
+!!           2019, 2020, 2021, 2022, 2023, 2024
 !!    Andrew Benson <abenson@carnegiescience.edu>
 !!
 !! This file is part of Galacticus.
@@ -83,7 +83,9 @@
      class           (intergalacticMediumStateClass          ), pointer :: intergalacticMediumState_ => null()
      class           (chemicalStateClass                     ), pointer :: chemicalState_            => null()
      double precision                                                   :: timeReionization                   , velocitySuppressionReionization, &
-          &                                                                opticalDepthReionization           , redshiftReionization
+          &                                                                opticalDepthReionization           , redshiftReionization,            &
+          &                                                                timeQuench                         ,velocitySuppressionQuench,        &
+          &                                                                redshiftQuench
      logical                                                            :: accretionNegativeAllowed           , accretionNewGrowthOnly
      type            (radiationFieldCosmicMicrowaveBackground), pointer :: radiation                 => null()
      integer                                                            :: countChemicals                     , massProgenitorMaximumID        , &
@@ -115,7 +117,7 @@
 
   interface accretionHaloSimple
      !!{
-     Constructors for the \refClass{accretionHaloSimple} halo accretion class.
+     Constructors for the {\normalfont \ttfamily simple} halo accretion class.
      !!}
      module procedure simpleConstructorParameters
      module procedure simpleConstructorInternal
@@ -139,7 +141,9 @@ contains
     class           (intergalacticMediumStateClass), pointer       :: intergalacticMediumState_
     class           (chemicalStateClass           ), pointer       :: chemicalState_
     double precision                                               :: timeReionization         , velocitySuppressionReionization, &
-         &                                                            opticalDepthReionization , redshiftReionization            
+         &                                                            opticalDepthReionization , redshiftReionization            ,&
+         &                                                            timeQuench                         ,velocitySuppressionQuench,        &
+         &                                                            redshiftQuench
     logical                                                        :: accretionNegativeAllowed , accretionNewGrowthOnly
 
     !![
@@ -172,9 +176,25 @@ contains
        !!]
        timeReionization=intergalacticMediumState_%electronScatteringTime(opticalDepthReionization,assumeFullyIonized=.true.)
     end if
+       !![
+    <inputParameter>
+      <name>redshiftQuench</name>
+      <defaultSource>(\citealt{hinshaw_nine-year_2012}; CMB$+H_0+$BAO)</defaultSource>
+      <defaultValue>3.0d0</defaultValue>
+      <description>The redshift below which baryonic accretion is suppressed.</description>
+      <source>parameters</source>
+    </inputParameter>
+      !!]
+      timeQuench=cosmologyFunctions_%cosmicTime(cosmologyFunctions_%expansionFactorFromRedshift(redshiftQuench))
     !![
     <inputParameter>
       <name>velocitySuppressionReionization</name>
+      <defaultValue>35.0d0</defaultValue>
+      <description>The velocity scale below which baryonic accretion is suppressed.</description>
+      <source>parameters</source>
+    </inputParameter>
+    <inputParameter>
+      <name>velocitySuppressionQuench</name>
       <defaultValue>35.0d0</defaultValue>
       <description>The velocity scale below which baryonic accretion is suppressed.</description>
       <source>parameters</source>
@@ -192,7 +212,7 @@ contains
       <source>parameters</source>
     </inputParameter>
     !!]
-    self=accretionHaloSimple(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_)
+    self=accretionHaloSimple(timeReionization,timeQuench,velocitySuppressionReionization,velocitySuppressionQuench,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_)
     !![
     <inputParametersValidate source="parameters"/>
     <objectDestructor name="cosmologyFunctions_"      />
@@ -205,15 +225,15 @@ contains
     return
   end function simpleConstructorParameters
 
-  function simpleConstructorInternal(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_) result(self)
+  function simpleConstructorInternal(timeReionization,timeQuench,velocitySuppressionReionization,velocitySuppressionQuench,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_) result(self)
     !!{
-    Internal constructor for the \refClass{accretionHaloSimple} halo accretion class.
+    Internal constructor for the {\normalfont \ttfamily simple} halo accretion class.
     !!}
     use :: Atomic_Data                  , only : Abundance_Pattern_Lookup
     use :: Chemical_Abundances_Structure, only : Chemicals_Property_Count
     implicit none
     type            (accretionHaloSimple          ), target                :: self
-    double precision                               , intent(in   )         :: timeReionization        , velocitySuppressionReionization
+    double precision                               , intent(in   )         :: timeReionization        , timeQuench, velocitySuppressionReionization, velocitySuppressionQuench
     logical                                        , intent(in   )         :: accretionNegativeAllowed, accretionNewGrowthOnly
     class           (cosmologyParametersClass     ), intent(in   ), target :: cosmologyParameters_
     class           (cosmologyFunctionsClass      ), intent(in   ), target :: cosmologyFunctions_
@@ -222,7 +242,7 @@ contains
     class           (chemicalStateClass           ), intent(in   ), target :: chemicalState_
     class           (intergalacticMediumStateClass), intent(in   ), target :: intergalacticMediumState_
     !![
-    <constructorAssign variables="timeReionization, velocitySuppressionReionization, accretionNegativeAllowed, accretionNewGrowthOnly, *cosmologyParameters_, *cosmologyFunctions_, *darkMatterHaloScale_, *accretionHaloTotal_, *chemicalState_, *intergalacticMediumState_"/>
+    <constructorAssign variables="timeReionization,timeQuench,velocitySuppressionReionization,velocitySuppressionQuench, accretionNegativeAllowed, accretionNewGrowthOnly, *cosmologyParameters_, *cosmologyFunctions_, *darkMatterHaloScale_, *accretionHaloTotal_, *chemicalState_, *intergalacticMediumState_"/>
     !!]
 
     allocate(self%radiation)
@@ -243,7 +263,7 @@ contains
 
   subroutine simpleDestructor(self)
     !!{
-    Destructor for the \refClass{accretionHaloSimple} halo accretion class.
+    Destructor for the {\normalfont \ttfamily simple} halo accretion class.
     !!}
     implicit none
     type(accretionHaloSimple), intent(inout) :: self
@@ -610,6 +630,12 @@ contains
          &  basic%time         (    ) > self%timeReionization                &
          &   .and.                                                           &
          &  self %velocityScale(node) < self%velocitySuppressionReionization &
+         & ) then
+       simpleFailedFraction=1.0d0
+    else if (                                                                &
+         &  basic%time         (    ) > self%timeQuench                      &
+         &   .and.                                                           &
+         &  self %velocityScale(node) < self%velocitySuppressionQuench       &
          & ) then
        simpleFailedFraction=1.0d0
     else
