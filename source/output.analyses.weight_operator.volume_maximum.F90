@@ -280,8 +280,13 @@ contains
     volumeMaximum=+distanceMaximum**3 &
          &        -distanceMinimum**3
     ! Multiply by the volume factor.
-    weight=+     weightValue                &
-         & *self%volumes      (outputIndex) &
-         & /     volumeMaximum
+    if (volumeMaximum > 0.0d0) then
+       weight=+     weightValue                &
+            & *self%volumes      (outputIndex) &
+            & /     volumeMaximum
+    else
+       ! Volume is zero - this galaxy can never be detected in the survey.
+       weight=+0.0d0
+    end if
     return
   end function volumeMaximumOperate

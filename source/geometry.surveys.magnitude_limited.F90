@@ -159,9 +159,12 @@ contains
          &                                                                                              -     magnitudeAbsolute         &
          &                                                                   )
     ! Take the larger of the two distances.
-    distanceMinimum=max(                               &
-         &              self%limitDistanceMinimum    , &
-         &                   distanceMinimumMagnitude  &
+    distanceMinimum=max(                                   &
+         &                  self%limitDistanceMinimum    , &
+         &              min(                               &
+         &                  self%limitDistanceMaximum    , &
+         &                       distanceMinimumMagnitude  &
+         &                 )                               &
          &             )
     return
   end function magnitudeLimitedDistanceMinimum
@@ -203,9 +206,11 @@ contains
          &                                                                                              -     magnitudeAbsolute         &
          &                                                                   )
     ! Take the smaller of the two distances.
-    distanceMaximum=min(                               &
-         &              self%limitDistanceMaximum    , &
-         &                   distanceMaximumMagnitude  &
+    distanceMaximum=max(                                   &
+         &                  self%limitDistanceMinimum    , &
+         &              min(                               &
+         &                  self%limitDistanceMaximum    , &
+         &                       distanceMaximumMagnitude  &
          &             )
     return
   end function magnitudeLimitedDistanceMaximum
