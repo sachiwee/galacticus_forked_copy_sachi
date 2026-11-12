@@ -29,6 +29,7 @@
   use :: Cosmology_Parameters      , only : cosmologyParameters                    , cosmologyParametersClass
   use :: Dark_Matter_Halo_Scales   , only : darkMatterHaloScale                    , darkMatterHaloScaleClass
   use :: Intergalactic_Medium_State, only : intergalacticMediumState               , intergalacticMediumStateClass
+  use :: Accretion_Halo_Suppression, only : accretionHaloSuppression               , accretionHaloSuppressionClass
   use :: Radiation_Fields          , only : radiationFieldCosmicMicrowaveBackground
 
   !![
@@ -67,6 +68,7 @@
      class           (cosmologyFunctionsClass                ), pointer :: cosmologyFunctions_       => null()
      class           (darkMatterHaloScaleClass               ), pointer :: darkMatterHaloScale_      => null()
      class           (intergalacticMediumStateClass          ), pointer :: intergalacticMediumState_ => null()
+     class           (accretionHaloSuppressionClass          ), pointer :: accretionHaloSuppression_ => null()
      class           (chemicalStateClass                     ), pointer :: chemicalState_            => null()
      double precision                                                   :: timeReionization                   , velocitySuppressionReionization, &
           &                                                                opticalDepthReionization           , redshiftReionization
@@ -129,6 +131,7 @@ contains
     class           (cosmologyFunctionsClass      ), pointer       :: cosmologyFunctions_
     class           (darkMatterHaloScaleClass     ), pointer       :: darkMatterHaloScale_
     class           (intergalacticMediumStateClass), pointer       :: intergalacticMediumState_
+    class           (accretionHaloSuppressionClass), pointer       :: accretionHaloSuppression_
     class           (chemicalStateClass           ), pointer       :: chemicalState_
     double precision                                               :: timeReionization         , velocitySuppressionReionization, &
          &                                                            opticalDepthReionization , redshiftReionization            
@@ -142,6 +145,12 @@ contains
     <objectBuilder class="darkMatterHaloScale"      name="darkMatterHaloScale_"      source="parameters"/>
     <objectBuilder class="chemicalState"            name="chemicalState_"            source="parameters"/>
     !!]
+    nullify(accretionHaloSuppression_)
+    if (parameters%isPresent('accretionHaloSuppression')) then
+    !![
+    <objectBuilder class="accretionHaloSuppression" name="accretionHaloSuppression_" source="parameters"/>
+    !!]
+    end if
     if (parameters%isPresent("redshiftReionization").or..not.parameters%isPresent("opticalDepthReionization")) then
        if (parameters%isPresent("opticalDepthReionization")) call Error_Report("only one of [opticalDepthReionization] and [redshiftReionization] should be specified"//{introspection:location})
        !![
@@ -196,7 +205,11 @@ contains
       <source>parameters</source>
     </inputParameter>
     !!]
-    self=accretionHaloSimple(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_)
+    if (associated(accretionHaloSuppression_)) then
+      self=accretionHaloSimple(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_,accretionHaloSuppression_)
+    else
+      self=accretionHaloSimple(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_)
+    end if
     !![
     <inputParametersValidate source="parameters"/>
     <objectDestructor name="cosmologyFunctions_"      />
@@ -204,12 +217,17 @@ contains
     <objectDestructor name="cosmologyParameters_"     />
     <objectDestructor name="accretionHaloTotal_"      />
     <objectDestructor name="darkMatterHaloScale_"     />
-    <objectDestructor name="chemicalState_"           />
+    <objectDestructor name="chemicalState_"           />       
     !!]
+    if (associated(accretionHaloSuppression_)) then
+    !![
+    <objectDestructor name="accretionHaloSuppression_"/>
+    !!]
+end if
     return
   end function simpleConstructorParameters
 
-  function simpleConstructorInternal(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_) result(self)
+  function simpleConstructorInternal(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_,accretionHaloSuppression_) result(self)
     !!{RST
     Internal constructor for the :galacticus-class:`accretionHaloSimple` halo accretion class.
     !!}
@@ -225,10 +243,16 @@ contains
     class           (darkMatterHaloScaleClass     ), intent(in   ), target :: darkMatterHaloScale_
     class           (chemicalStateClass           ), intent(in   ), target :: chemicalState_
     class           (intergalacticMediumStateClass), intent(in   ), target :: intergalacticMediumState_
+    class           (accretionHaloSuppressionClass), intent(in   ), target, optional :: accretionHaloSuppression_
     !![
     <constructorAssign variables="timeReionization, velocitySuppressionReionization, accretionNegativeAllowed, accretionNewGrowthOnly, *cosmologyParameters_, *cosmologyFunctions_, *darkMatterHaloScale_, *accretionHaloTotal_, *chemicalState_, *intergalacticMediumState_"/>
     !!]
-
+    if(present(accretionHaloSuppression_)) then
+      self%accretionHaloSuppression_ => accretionHaloSuppression_
+      !![
+        <referenceCountIncrement owner="self" object="accretionHaloSuppression_"/>
+      !!]
+    end if
     allocate(self%radiation)
     !![
     <referenceConstruct isResult="yes" owner="self" object="radiation" constructor="radiationFieldCosmicMicrowaveBackground(cosmologyFunctions_)"/>
@@ -259,6 +283,7 @@ contains
     <objectDestructor name="self%accretionHaloTotal_"      />
     <objectDestructor name="self%chemicalState_"           />
     <objectDestructor name="self%intergalacticMediumState_"/>
+    <objectDestructor name="self%accretionHaloSuppression_"/>
     <objectDestructor name="self%radiation"                />
     !!]
     return
@@ -832,14 +857,29 @@ contains
     class(nodeComponentBasic ), pointer       :: basic
 
     basic => node%basic()
-    if     (                                                                 &
-         &  basic%time         (    ) > self%timeReionization                &
-         &   .and.                                                           &
-         &  self %velocityScale(node) < self%velocitySuppressionReionization &
-         & ) then
-       simpleFailedFraction=1.0d0
+
+    if (associated(self%accretionHaloSuppression_)) then
+         if     (                                                                 &
+               &  basic%time         (    ) > self%timeReionization                &
+               &   .and.                                                           &
+               &  self %velocityScale(node) < self%velocitySuppressionReionization &
+               & ) then
+            simpleFailedFraction=1.0d0
+         else if (self%accretionHaloSuppression_%isSuppressed(node)) then
+            simpleFailedFraction=1.0d0
+         else
+            simpleFailedFraction=0.0d0
+         end if
     else
-       simpleFailedFraction=0.0d0
+         if     (                                                                 &
+               &  basic%time         (    ) > self%timeReionization                &
+               &   .and.                                                           &
+               &  self %velocityScale(node) < self%velocitySuppressionReionization &
+               & ) then
+            simpleFailedFraction=1.0d0
+         else
+            simpleFailedFraction=0.0d0
+         end if
     end if
     return
   end function simpleFailedFraction

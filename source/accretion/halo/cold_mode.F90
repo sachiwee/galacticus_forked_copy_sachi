@@ -143,7 +143,7 @@ contains
     return
   end function coldModeConstructorParameters
 
-  function coldModeConstructorInternal(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,thresholdStabilityShock,widthTransitionStabilityShock,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_,coolingFunction_) result(self)
+  function coldModeConstructorInternal(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,thresholdStabilityShock,widthTransitionStabilityShock,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_,coolingFunction_,accretionHaloSuppression_) result(self)
     !!{RST
     Internal constructor for the :galacticus-class:`accretionHaloColdMode` halo accretion class.
     !!}
@@ -159,11 +159,12 @@ contains
     class           (chemicalStateClass           ), intent(in   ), target :: chemicalState_
     class           (coolingFunctionClass         ), intent(in   ), target :: coolingFunction_
     class           (intergalacticMediumStateClass), intent(in   ), target :: intergalacticMediumState_
+    class           (accretionHaloSuppressionClass), intent(in   ), target, optional :: accretionHaloSuppression_
     !![
     <constructorAssign variables="thresholdStabilityShock, widthTransitionStabilityShock, *coolingFunction_"/>
     !!]
 
-    self%accretionHaloSimple=accretionHaloSimple(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_)
+    self%accretionHaloSimple=accretionHaloSimple(timeReionization,velocitySuppressionReionization,accretionNegativeAllowed,accretionNewGrowthOnly,cosmologyParameters_,cosmologyFunctions_,darkMatterHaloScale_,accretionHaloTotal_,chemicalState_,intergalacticMediumState_,accretionHaloSuppression_)
     call self%initialize()
     return
   end function coldModeConstructorInternal
